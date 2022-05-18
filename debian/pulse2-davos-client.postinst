@@ -10,6 +10,12 @@ if [ $1 = "configure" ]; then
         fi
 	mkdir -p /var/lib/pulse2/imaging/postinst/sysprep/drivers
         chown -R $USER:root /var/lib/pulse2/imaging/postinst/sysprep/drivers
+
+
+        if [ ! -L "/var/lib/pulse2/clients/davos" ]; then
+            ln -s /var/lib/pulse2/imaging/davos /var/lib/pulse2/clients/
+        fi
+
 fi
 
 #DEBHELPER#
