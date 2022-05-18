@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+apt install -y squashfs-tools
+
 # Edit these line to update clonezilla version
 version="20220118-jammy"
 arch="amd64"
