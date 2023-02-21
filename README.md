@@ -1,26 +1,28 @@
-# What is PULSE DAVOS CLIENT?
+# What is Medulla Davos client?
  
-PULSE DAVOS CLIENT is a network boot client for PULSE IT automation and lifecycle workstation management tool.
+Medulla Davos client is a network boot client managing any client with network boot configured.
 
-PULSE DAVOS CLIENT relies on open source technologies like python, c, hdt, clonezilla, and even more.
+Medulla Davos client relies on open source technologies like python, c, hdt, clonezilla, and even more.
 
 # Get help
 
 * Website : <http://www.siveo.net>
 * Nighty Builds : <http://git.siveo.net>
-* IRC : <irc://irc.freenode.net/#pulse-en > <irc://irc.freenode.net/#pulse-fr >
-* Sources : <https://github.com/pulse-project/mmc-core>
-* Bugtracker : <https://github.com/pulse-project/mmc-core/issues>
-* Forum : <http://forum.pulse2.fr/>
+* Discuss on IRC chanel [irc://irc.libera.chat](https://web.libera.chat/)
+  * Channel : #medulla-fr
+  * Channel : #medulla-en
+* Sources : <https://github.com/medulla-tech>
+* Bugtracker : Issues trackers are available on each component
 
 
 # Installation
 
-The complete installation procedure can be found at <https://github.com/pulse-project/pulse/INSTALL>.
+The complete installation procedure can be found at [here](https://github.com/medulla-tech/integration/tree/main/ansible)
+.
 If you find some errors, please feel free to contribute.
 
 Thanks
 
 # License
 
-PULSE DAVOS CLIENT is distributed under GPL v2. 
+Medulla Davos client is distributed under GPL v2. 
