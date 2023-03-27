@@ -66,7 +66,7 @@ class RegistryKeyHasNoParentException(RegistryParse.RegistryStructureDoesNotExis
         super(RegistryKeyHasNoParentException, self).__init__(value)
 
     def __str__(self):
-        return "Registry key has no parent key: %s" % (self._value)
+        return f"Registry key has no parent key: {self._value}"
 
 
 class RegistryKeyNotFoundException(RegistryParse.RegistryStructureDoesNotExist):
@@ -81,7 +81,7 @@ class RegistryKeyNotFoundException(RegistryParse.RegistryStructureDoesNotExist):
         super(RegistryKeyNotFoundException, self).__init__(value)
 
     def __str__(self):
-        return "Registry key not found: %s" % (self._value)
+        return f"Registry key not found: {self._value}"
 
 class RegistryValueNotFoundException(RegistryParse.RegistryStructureDoesNotExist):
     """
@@ -95,7 +95,7 @@ class RegistryValueNotFoundException(RegistryParse.RegistryStructureDoesNotExist
         super(RegistryValueNotFoundException, self).__init__(value)
 
     def __str__(self):
-        return "Registry value not found: %s" % (self._value)
+        return f"Registry value not found: {self._value}"
 
 class RegistryValue(object):
     """
@@ -111,10 +111,7 @@ class RegistryValue(object):
         Get the name of the value as a string.
         The name of the default value is returned as "(default)".
         """
-        if self._vkrecord.has_name():
-            return self._vkrecord.name()
-        else:
-            return  "(default)"
+        return self._vkrecord.name() if self._vkrecord.has_name() else "(default)"
 
     def value_type(self):
         """
@@ -273,8 +270,8 @@ class RegistryKey(object):
                 if v.name().lower() == name.lower():
                     return RegistryValue(v)
         except RegistryParse.RegistryStructureDoesNotExist:
-            raise RegistryValueNotFoundException(self.path() + " : " + name)
-        raise RegistryValueNotFoundException(self.path() + " : " + name)
+            raise RegistryValueNotFoundException(f"{self.path()} : {name}")
+        raise RegistryValueNotFoundException(f"{self.path()} : {name}")
 
     def find_key(self, path):
         """

@@ -217,12 +217,13 @@ class Enum(object):
     def __delitem__(self, index):
         raise EnumImmutableError(index)
 
-    def __iter__(self):
-        return iter(self._values)
-
     def __contains__(self, value):
         is_member = False
-        if isinstance(value, basestring):
+        return (
+            (value in self._keys)
+            if isinstance(value, basestring)
+            else (value in self._values)
+        )
             is_member = (value in self._keys)
         else:
             is_member = (value in self._values)

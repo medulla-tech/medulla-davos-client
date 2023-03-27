@@ -41,19 +41,22 @@ class imageRestorer(object):
 
     @property
     def available_images(self):
-        images = []
-        for d in os.listdir('/home/partimag'):
-            if os.path.isfile('/home/partimag/%s/davosInfo.json' % d):
-                images.append(d)
-        return images
+        return [
+            d
+            for d in os.listdir('/home/partimag')
+            if os.path.isfile(f'/home/partimag/{d}/davosInfo.json')
+        ]
 
     def select_image(self):
         def _get_title(image_uuid):
             try:
-                _json = json.loads(open('/home/partimag/%s/davosInfo.json' % image_uuid, 'r').read())
+                _json = json.loads(
+                    open(f'/home/partimag/{image_uuid}/davosInfo.json', 'r').read()
+                )
                 return _json['title']
             except:
                 return image_uuid
+
         available_images = self.available_images
         d = Dialog(dialog="dialog")
         choices = [(str(available_images.index(x) + 1), _get_title(x)) for x in available_images]
@@ -68,12 +71,12 @@ class imageRestorer(object):
     def check_image(self):
 
         # Check if the image exists or not
-        if not os.path.isdir('/home/partimag/' + self.image_uuid):
+        if not os.path.isdir(f'/home/partimag/{self.image_uuid}'):
             d = Dialog(dialog="dialog")
             d.msgbox("Could not find image on server", backtitle="Pulse Imaging Client")
             raise Exception('Could not find image on server')
         # Check if image is compatible (davos)
-        if not os.path.isfile('/home/partimag/%s/davosInfo.json' % self.image_uuid):
+        if not os.path.isfile(f'/home/partimag/{self.image_uuid}/davosInfo.json'):
             d = Dialog(dialog="dialog")
             d.msgbox("Selected image is not compatible with this backend, please convert this image to the correct format.", backtitle="Pulse Imaging Client")
             raise Exception('Could not find image on server')
@@ -102,9 +105,15 @@ class imageRestorer(object):
 
         # Start the image restore
         if self.mode == 'multicast':
-            error_code = subprocess.call('yes 2>/dev/null| /usr/sbin/ocs-sr %s --mcast-port 2232 multicast_restoredisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_restorer.log' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
+            error_code = subprocess.call(
+                f"yes 2>/dev/null| /usr/sbin/ocs-sr {self.manager.clonezilla_params['clonezilla_restorer_params']} --mcast-port 2232 multicast_restoredisk {self.image_uuid} {self.device} 2>&1 1>/dev/null | tee /var/log/davos_restorer.log",
+                shell=True,
+            )
         else:
-            error_code = subprocess.call('yes 2>/dev/null| /usr/sbin/ocs-sr %s restoredisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_restorer.log' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
+            error_code = subprocess.call(
+                f"yes 2>/dev/null| /usr/sbin/ocs-sr {self.manager.clonezilla_params['clonezilla_restorer_params']} restoredisk {self.image_uuid} {self.device} 2>&1 1>/dev/null | tee /var/log/davos_restorer.log",
+                shell=True,
+            )
 
         # Save image JSON and LOG
         current_ts = time.strftime("%Y%m%d%H%M%S")
@@ -113,7 +122,7 @@ class imageRestorer(object):
 
         if error_code != 0:
             self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details.')
-            saver_log_path = os.path.join(image_dir, 'davos_restorer-%s.log' % (current_ts) )
+            saver_log_path = os.path.join(image_dir, f'davos_restorer-{current_ts}.log')
             open(saver_log_path, 'w').write(open('/var/log/davos_restorer.log', 'r').read())
             time.sleep(15)
 

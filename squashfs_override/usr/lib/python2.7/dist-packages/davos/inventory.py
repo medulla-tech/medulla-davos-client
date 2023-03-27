@@ -34,7 +34,7 @@ class Inventory(object):
         self.editNodeText('OSNAME', 'Unknown operating system (PXE network boot inventory)')
         self.editNodeText('FULL_NAME', 'Unknown operating system (PXE network boot inventory)')
         timestamp = time.ctime()
-        self.editNodeText('OSCOMMENTS', 'Inventory generated on ' + timestamp)
+        self.editNodeText('OSCOMMENTS', f'Inventory generated on {timestamp}')
 
         # If we have a detected OS, we inventory OS and SOFT
         #if self.OS:
@@ -42,9 +42,7 @@ class Inventory(object):
 
         # Find mac address of connected interface
         pnic = psutil.net_io_counters(pernic=True)
-        stats = {}
-        for nicname in list(pnic.keys()):
-            stats[nicname] = pnic[nicname].bytes_sent
+        stats = {nicname: pnic[nicname].bytes_sent for nicname in list(pnic.keys())}
         self.interface = max(stats, key=stats.get)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         info = fcntl.ioctl(sock.fileno(), 0x8927,  struct.pack('256s', self.interface[:15]))
@@ -60,11 +58,13 @@ class Inventory(object):
 
         # Copy file to inventories folder on tftp server
         self.logger.info('Uploading inventory to Pulse server')
-        filehandler = open('/tmp' + self.macaddress + '.xml', 'w')
-        filehandler.write(data)
-        filehandler.close()
+        with open(f'/tmp{self.macaddress}.xml', 'w') as filehandler:
+            filehandler.write(data)
         tftpclient = tftpy.TftpClient(manager.tftp_ip, 69)
-        tftpclient.upload('/' + manager.dump_path + '/' + self.macaddress + '.xml', '/tmp' + self.macaddress + '.xml')
+        tftpclient.upload(
+            f'/{manager.dump_path}/{self.macaddress}.xml',
+            f'/tmp{self.macaddress}.xml',
+        )
 
 
     @property
@@ -87,12 +87,10 @@ class Inventory(object):
         from Registry import Registry
         reg = Registry.Registry('/mnt/Windows/System32/config/SOFTWARE')
 
-        # ======== OS SECTION ===============================================
-
-        cv_dict = {}
-        for entry in reg.open('Microsoft\\Windows NT\\CurrentVersion').values():
-            cv_dict[entry.name()] = entry.value()
-
+        cv_dict = {
+            entry.name(): entry.value()
+            for entry in reg.open('Microsoft\\Windows NT\\CurrentVersion').values()
+        }
         if 'ProductName' in cv_dict:
             self.editNodeText('OSNAME', 'Microsoft ' + cv_dict['ProductName'])
             self.editNodeText('FULL_NAME', 'Microsoft ' + cv_dict['ProductName'])
@@ -127,11 +125,7 @@ class Inventory(object):
                 except:
                     soft_dict[entry.name()] = entry.value()
 
-            soft = {}
-            soft['ARCH'] = 'x86_64'
-            soft['FROM'] = 'registry'
-            soft['GUID'] = key.name()
-
+            soft = {'ARCH': 'x86_64', 'FROM': 'registry', 'GUID': key.name()}
             if 'HelpLink' in soft_dict:
                 soft['HELPLINK'] = soft_dict['HelpLink']
 
@@ -163,7 +157,7 @@ class Inventory(object):
         cont = self.dom.getElementsByTagName('CONTENT')[0]
         softnode = self.dom.createElement('SOFTWARES')
         for k in ['ARCH', 'FROM', 'GUID', 'NAME', 'PUBLISHER', 'UNINSTALL_STRING', 'URL_INFO_ABOUT', 'VERSION']:
-            if not k in data:
+            if k not in data:
                 continue
             elem = self.dom.createElement(k)
             txt = self.dom.createTextNode(data[k])
