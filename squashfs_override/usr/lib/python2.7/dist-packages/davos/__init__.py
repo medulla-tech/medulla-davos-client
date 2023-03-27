@@ -124,12 +124,9 @@ class davosManager(object):
         with open('/proc/cmdline', 'r') as f:
             cmd_line = f.read().strip()
             for item in cmd_line.split(' '):
-                if '=' in item:
-                    key, value = item.split('=')
-                else:
-                    key, value = item, None
+                key, value = item.split('=') if '=' in item else (item, None)
                 self.kernel_params[key] = value
-        
+
         self.logger.debug('Got kernel params %s', str(self.kernel_params))
 
 
@@ -162,8 +159,8 @@ class davosManager(object):
         self.hostname = self.host_data['shortname']
         # Setting env and machine hostname (for inventory)
         os.environ['HOSTNAME'] = self.hostname
-        self.runInShell('hostname ' + self.hostname)
-        self.runInShell('sed -i "s/debian/' + self.hostname + '/" /etc/hosts')
+        self.runInShell(f'hostname {self.hostname}')
+        self.runInShell(f'sed -i "s/debian/{self.hostname}/" /etc/hosts')
 
         self.logger.info('Got hostname: %s', self.hostname)
 
@@ -193,7 +190,9 @@ class davosManager(object):
             os.makedirs(local_dir)
         if self.isEmptyDir(local_dir):
             self.logger.info('Mounting %s NFS Share', local_dir)
-            o, e, ec = self.runInShell('mount %s:%s %s' % (server, self.nfs_share_masters, local_dir))
+            o, e, ec = self.runInShell(
+                f'mount {server}:{self.nfs_share_masters} {local_dir}'
+            )
             if ec != 0:
                 self.logger.error('Cannot mount %s Share', local_dir)
                 self.logger.error('Output: %s', e)
@@ -204,7 +203,9 @@ class davosManager(object):
             os.mkdir(local_dir)
         if self.isEmptyDir(local_dir):
             self.logger.info('Mounting %s NFS Share', local_dir)
-            o, e, ec = self.runInShell('mount %s:%s %s' % (server, self.nfs_share_postinst, local_dir))
+            o, e, ec = self.runInShell(
+                f'mount {server}:{self.nfs_share_postinst} {local_dir}'
+            )
             if ec != 0:
                 self.logger.error('Cannot mount %s Share', local_dir)
                 self.logger.error('Output: %s', e)
@@ -238,7 +239,9 @@ class davosManager(object):
         """
         answer = ""
         while answer not in ["y", "n"]:
-            answer = raw_input("You have entered %s. Is this correct [Y/N]? " % response).lower()
+            answer = raw_input(
+                f"You have entered {response}. Is this correct [Y/N]? "
+            ).lower()
         return answer == "y"
 
     def setHostname(self):
@@ -253,9 +256,9 @@ class davosManager(object):
                     self.hostname = machinename
                     break
             else:
-                print("The hostname %s entered is not valid." % machinename)
+                print(f"The hostname {machinename} entered is not valid.")
         # Setting hostname
         self.logger.info('Setting hostname: %s', self.hostname)
         os.environ['HOSTNAME'] = self.hostname
-        self.runInShell('hostname ' + self.hostname)
-        self.runInShell('sed -i "s/debian/' + self.hostname + '/" /etc/hosts')
+        self.runInShell(f'hostname {self.hostname}')
+        self.runInShell(f'sed -i "s/debian/{self.hostname}/" /etc/hosts')

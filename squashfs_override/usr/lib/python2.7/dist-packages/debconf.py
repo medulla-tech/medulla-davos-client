@@ -52,7 +52,7 @@ class Debconf:
     def setUp(self, title):
         self.version = self.version(2)
         if self.version[:2] != '2.':
-            raise DebconfError(256, "wrong version: %s" % self.version)
+            raise DebconfError(256, f"wrong version: {self.version}")
         self.capabilities = self.capb().split()
         if title:
             self.title(title)
@@ -76,21 +76,15 @@ class Debconf:
                 else:
                     raise
 
-        if ' ' in resp:
-            status, data = resp.split(' ', 1)
-        else:
-            status, data = resp, ''
+        status, data = resp.split(' ', 1) if ' ' in resp else (resp, '')
         status = int(status)
         if status == 0:
             return data
-        elif status == 1:   # unescaped data
+        elif status == 1:
             unescaped = ''
             for chunk in re.split(r'(\\.)', data):
                 if chunk.startswith('\\') and len(chunk) == 2:
-                    if chunk[1] == 'n':
-                        unescaped += '\n'
-                    else:
-                        unescaped += chunk[1]
+                    unescaped += '\n' if chunk[1] == 'n' else chunk[1]
                 else:
                     unescaped += chunk
             return unescaped

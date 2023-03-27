@@ -12,7 +12,7 @@ class pkgServerProxy(object):
         # Building url (dirty, port and protocol are hardcoded
         # but we are limited by grub command line max length
         # We could pass them if we upgrade to grub2
-        self.base_url = "https://%s:9990/" % ip
+        self.base_url = f"https://{ip}:9990/"
 
     def __getattr__(self, attr_name):
         # Return the corresponding api proxy according to attr

@@ -64,7 +64,7 @@ class RegistryException(Exception):
         self._value = value
 
     def __str__(self):
-        return "Registry Exception: %s" % (self._value)
+        return f"Registry Exception: {self._value}"
 
 
 class RegistryStructureDoesNotExist(RegistryException):
@@ -82,7 +82,7 @@ class RegistryStructureDoesNotExist(RegistryException):
         super(RegistryStructureDoesNotExist, self).__init__(value)
 
     def __str__(self):
-        return "Registry Structure Does Not Exist Exception: %s" % (self._value)
+        return f"Registry Structure Does Not Exist Exception: {self._value}"
 
 
 class ParseException(RegistryException):
@@ -99,7 +99,7 @@ class ParseException(RegistryException):
         super(ParseException, self).__init__(value)
 
     def __str__(self):
-        return "Registry Parse Exception(%s)" % (self._value)
+        return f"Registry Parse Exception({self._value})"
 
 
 class UnknownTypeException(RegistryException):
@@ -129,7 +129,7 @@ class UnknownTypeException(RegistryException):
         super(UnknownTypeException, self).__init__(value)
 
     def __str__(self):
-        return "Unknown Type Exception(%s)" % (self._value)
+        return f"Unknown Type Exception({self._value})"
 
 
 class RegistryBlock(object):
@@ -163,7 +163,7 @@ class RegistryBlock(object):
         Arguments:
         - `offset`: The relative offset from the start of the block.
         """
-        return struct.unpack_from(str("<H"), self._buf, self._offset + offset)[0]
+        return struct.unpack_from("<H", self._buf, self._offset + offset)[0]
 
     def unpack_dword(self, offset):
         """
@@ -171,7 +171,7 @@ class RegistryBlock(object):
         Arguments:
         - `offset`: The relative offset from the start of the block.
         """
-        return struct.unpack_from(str("<I"), self._buf, self._offset + offset)[0]
+        return struct.unpack_from("<I", self._buf, self._offset + offset)[0]
 
     def unpack_int(self, offset):
         """
@@ -179,7 +179,7 @@ class RegistryBlock(object):
         Arguments:
         - `offset`: The relative offset from the start of the block.
         """
-        return struct.unpack_from(str("<i"), self._buf, self._offset + offset)[0]
+        return struct.unpack_from("<i", self._buf, self._offset + offset)[0]
 
     def unpack_qword(self, offset):
         """
@@ -187,7 +187,7 @@ class RegistryBlock(object):
         Arguments:
         - `offset`: The relative offset from the start of the block.
         """
-        return struct.unpack_from(str("<Q"), self._buf, self._offset + offset)[0]
+        return struct.unpack_from("<Q", self._buf, self._offset + offset)[0]
 
     def unpack_string(self, offset, length):
         """
@@ -196,7 +196,7 @@ class RegistryBlock(object):
         - `offset`: The relative offset from the start of the block.
         - `length`: The length of the string.
         """
-        return struct.unpack_from(str("<%ds") % (length), self._buf, self._offset + offset)[0]
+        return struct.unpack_from("<%ds" % length, self._buf, self._offset + offset)[0]
 
     def absolute_offset(self, offset):
         """
@@ -240,10 +240,6 @@ class REGFBlock(RegistryBlock):
 
         _seq1 = self.unpack_dword(0x4)
         _seq2 = self.unpack_dword(0x8)
-
-        if _seq1 != _seq2:
-            # the registry was not synchronized
-            pass
 
         # TODO: compute checksum and check
 
@@ -325,10 +321,7 @@ class HBINCell(RegistryBlock):
         """
         Size of this cell, as an unsigned integer.
         """
-        if self.is_free():
-            return self._size
-        else:
-            return self._size * -1
+        return self._size if self.is_free() else self._size * -1
 
     def next(self):
         """
@@ -484,7 +477,7 @@ class DBIndirectBlock(Record):
         while length > 0:
             off = self.abs_offset_from_hbin_offset(self.unpack_dword(4 * count))
             size = min(0x3fd8, length)
-            b += HBINCell(self._buf, off, self).raw_data()[0:size]
+            b += HBINCell(self._buf, off, self).raw_data()[:size]
 
             count += 1
             length -= size
@@ -541,16 +534,7 @@ def decode_utf16le(s):
     if b"\x00\x00" in s:
         index = s.index(b"\x00\x00")
         if index > 2:
-            if s[index - 2] != b"\x00"[0]: #py2+3 
-                #  61 00 62 00 63 64 00 00
-                #                    ^  ^-- end of string
-                #                    +-- index
-                s = s[:index + 2]
-            else:
-                #  61 00 62 00 63 00 00 00
-                #                 ^     ^-- end of string
-                #                 +-- index
-                s = s[:index + 3]
+            s = s[:index + 2] if s[index - 2] != b"\x00"[0] else s[:index + 3]
     if (len(s) % 2) != 0:
         s = s + b"\x00"
     s = s.decode("utf16")
@@ -610,22 +594,18 @@ class VKRecord(Record):
         elif data_type == RegFileTime:
             return "RegFileTime"
         else:
-            return "Unknown type: %s" % (hex(data_type))
+            return f"Unknown type: {hex(data_type)}"
 
     def __str__(self):
-        if self.has_name():
-            name = self.name()
-        else:
-            name = "(default)"
-
+        name = self.name() if self.has_name() else "(default)"
         data = ""
         data_type = self.data_type()
-        if data_type == RegSZ or data_type == RegExpandSZ:
-            data = self.data()[0:16] + "..."
+        if data_type in [RegSZ, RegExpandSZ]:
+            data = f"{self.data()[:16]}..."
         elif data_type == RegMultiSZ:
-            data = str(len(self.data())) + " strings"
-        elif data_type == RegDWord or data_type == RegQWord:
-            data = str(hex(self.data()))
+            data = f"{len(self.data())} strings"
+        elif data_type in [RegDWord, RegQWord]:
+            data = hex(self.data())
         elif data_type == RegNone:
             data = "(none)"
         elif data_type == RegBin:
@@ -660,9 +640,8 @@ class VKRecord(Record):
         """
         if not self.has_name():
             return ""
-        else:
-            name_length = self.unpack_word(0x2)
-            return self.unpack_string(0x14, name_length).decode("windows-1252")
+        name_length = self.unpack_word(0x2)
+        return self.unpack_string(0x14, name_length).decode("windows-1252")
 
     def data_type(self):
         """
@@ -703,23 +682,22 @@ class VKRecord(Record):
         data_offset = self.data_offset()
         ret = None
 
-        if data_type == RegSZ or data_type == RegExpandSZ:
+        if data_type in [RegSZ, RegExpandSZ]:
             if data_length >= 0x80000000:
                 # data is contained in the data_offset field
                 ret = self._buf[data_offset:data_offset + 0x4]
             elif 0x3fd8 < data_length < 0x80000000:
                 d = HBINCell(self._buf, data_offset, self)
-                if d.data_id() == b"db":
-                    # this should always be the case
-                    # but empirical testing does not confirm this
-                    ret = d.child().large_data(data_length)
-                else:
-                    ret = d.raw_data()[:data_length]
+                ret = (
+                    d.child().large_data(data_length)
+                    if d.data_id() == b"db"
+                    else d.raw_data()[:data_length]
+                )
             else:
                 d = HBINCell(self._buf, data_offset, self)
                 data_offset = d.data_offset()
                 ret = self._buf[data_offset:data_offset + data_length]
-        elif data_type == RegBin or data_type == RegNone:
+        elif data_type in [RegBin, RegNone]:
             if data_length >= 0x80000000:
                 data_length -= 0x80000000
                 ret = self._buf[data_offset:data_offset + data_length]
@@ -756,10 +734,12 @@ class VKRecord(Record):
             d = HBINCell(self._buf, data_offset, self)
             data_offset = d.data_offset()
             ret = self._buf[data_offset:data_offset + 4]
-        elif data_type == RegLink or \
-                        data_type == RegResourceList or \
-                        data_type == RegFullResourceDescriptor or \
-                        data_type == RegResourceRequirementsList:
+        elif data_type in [
+            RegLink,
+            RegResourceList,
+            RegFullResourceDescriptor,
+            RegResourceRequirementsList,
+        ]:
             if data_length >= 0x80000000:
                 data_length -= 0x80000000
                 ret = self._buf[data_offset:data_offset + data_length]
@@ -777,20 +757,16 @@ class VKRecord(Record):
             ret = self._buf[data_offset + 4:data_offset + 4 + data_length]
         elif data_length < 5 or data_length >= 0x80000000:
             ret = self.unpack_binary(0x8, 4)
-        else:
-            if data_length >= 0x80000000:
-                data_length -= 0x80000000
-                ret = self._buf[data_offset:data_offset + data_length]
-            elif 0x3fd8 < data_length < 0x80000000:
-                d = HBINCell(self._buf, data_offset, self)
-                if d.data_id() == b"db":
-                    # this should always be the case
-                    # but empirical testing does not confirm this
-                    ret = d.child().large_data(data_length)
-                else:
-                    ret = d.raw_data()[:data_length]
+        elif 0x3FD8 < data_length < 0x80000000:
+            d = HBINCell(self._buf, data_offset, self)
+            if d.data_id() == b"db":
+                # this should always be the case
+                # but empirical testing does not confirm this
+                ret = d.child().large_data(data_length)
             else:
-                ret = self._buf[data_offset + 4:data_offset + 4 + data_length]
+                ret = d.raw_data()[:data_length]
+        else:
+            ret = self._buf[data_offset + 4:data_offset + 4 + data_length]
         return ret
 
     def data(self):
@@ -831,30 +807,32 @@ class VKRecord(Record):
         data_length = self.raw_data_length()
         d = self.raw_data()
 
-        if data_type == RegSZ or data_type == RegExpandSZ:
+        if data_type in [RegSZ, RegExpandSZ]:
             return decode_utf16le(d)
-        elif data_type == RegBin or data_type == RegNone:
+        elif data_type in [RegBin, RegNone]:
             return d
         elif data_type == RegDWord:
-            return struct.unpack_from(str("<I"), d, 0)[0]
+            return struct.unpack_from("<I", d, 0)[0]
         elif data_type == RegMultiSZ:
             s = d.decode("utf16")
             return s.split("\x00")
         elif data_type == RegQWord:
-            return struct.unpack_from(str("<Q"), d, 0)[0]
+            return struct.unpack_from("<Q", d, 0)[0]
         elif data_type == RegBigEndian:
-            return struct.unpack_from(str(">I"), d, 0)[0]
-        elif data_type == RegLink or \
-                        data_type == RegResourceList or \
-                        data_type == RegFullResourceDescriptor or \
-                        data_type == RegResourceRequirementsList:
+            return struct.unpack_from(">I", d, 0)[0]
+        elif data_type in [
+            RegLink,
+            RegResourceList,
+            RegFullResourceDescriptor,
+            RegResourceRequirementsList,
+        ]:
             # we don't really support these types, but can at least
             #  return raw binary for someone else to work with.
             return d
         elif data_type == RegFileTime:
             return parse_windows_timestamp(d)
         elif data_length < 5 or data_length >= 0x80000000:
-            return struct.unpack_from(str("<I"), d, 0)[0]
+            return struct.unpack_from("<I", d, 0)[0]
         else:
             raise UnknownTypeException("Unknown VK Record type 0x%x at 0x%x" % (data_type, self.offset()))
 
@@ -912,7 +890,7 @@ class ValuesList(HBINCell):
         """
         value_item = 0x0
 
-        for _ in range(0, self._number):
+        for _ in range(self._number):
             value_offset = self.abs_offset_from_hbin_offset(self.unpack_dword(value_item))
 
             d = HBINCell(self._buf, value_offset, self)
@@ -977,13 +955,12 @@ class RIRecord(SubkeyList):
         """
         key_index = 0x4
 
-        for _ in range(0, self._keys_len()):
+        for _ in range(self._keys_len()):
             key_offset = self.abs_offset_from_hbin_offset(self.unpack_dword(key_index))
             d = HBINCell(self._buf, key_offset, self)
 
             try:
-                for k in d.child().keys():
-                    yield k
+                yield from d.child().keys()
             except RegistryStructureDoesNotExist:
                 raise ParseException("Unsupported subkey list encountered.")
 
@@ -1011,7 +988,7 @@ class DirectSubkeyList(SubkeyList):
         """
         key_index = 0x4
 
-        for _ in range(0, self._keys_len()):
+        for _ in range(self._keys_len()):
             key_offset = self.abs_offset_from_hbin_offset(self.unpack_dword(key_index))
 
             d = HBINCell(self._buf, key_offset, self)
@@ -1044,7 +1021,7 @@ class LIRecord(DirectSubkeyList):
         """
         key_index = 0x4
 
-        for _ in range(0, self._keys_len()):
+        for _ in range(self._keys_len()):
             key_offset = self.abs_offset_from_hbin_offset(self.unpack_dword(key_index))
 
             d = HBINCell(self._buf, key_offset, self)
@@ -1153,7 +1130,13 @@ class NKRecord(Record):
 
         offset = self.abs_offset_from_hbin_offset(classname_offset)
         d = HBINCell(self._buf, offset, self)
-        return struct.unpack_from(str("<%ds") % (classname_length), self._buf, d.data_offset())[0].decode("utf-16le").rstrip("\x00")
+        return (
+            struct.unpack_from(
+                "<%ds" % classname_length, self._buf, d.data_offset()
+            )[0]
+            .decode("utf-16le")
+            .rstrip("\x00")
+        )
 
     def timestamp(self):
         """
@@ -1226,9 +1209,7 @@ class NKRecord(Record):
         Get the number of values associated with this NKRecord/Key.
         """
         num = self.unpack_dword(0x24)
-        if num == 0xFFFFFFFF:
-            return 0
-        return num
+        return 0 if num == 0xFFFFFFFF else num
 
     def values_list(self):
         """
@@ -1248,9 +1229,7 @@ class NKRecord(Record):
         Get the number of subkeys of this key.
         """
         number = self.unpack_dword(0x14)
-        if number == 0xFFFFFFFF:
-            return 0
-        return number
+        return 0 if number == 0xFFFFFFFF else number
 
     def subkey_list(self):
         """
@@ -1275,7 +1254,9 @@ class NKRecord(Record):
         elif id_ == b"li":
             l = LIRecord(self._buf, d.data_offset(), self)
         else:
-            raise ParseException("Subkey list with type %s encountered, but not yet supported." % (id_))
+            raise ParseException(
+                f"Subkey list with type {id_} encountered, but not yet supported."
+            )
 
         return l
 

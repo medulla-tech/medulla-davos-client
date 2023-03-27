@@ -84,12 +84,12 @@ class error(Exception):
     def __init__(self, message=None):
         self.message = message
     def __str__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.message)
+        return f"<{self.__class__.__name__}: {self.message}>"
     def complete_message(self):
         if self.message:
-            return "%s: %s" % (self.ExceptionShortDescription, self.message)
+            return f"{self.ExceptionShortDescription}: {self.message}"
         else:
-            return "%s" % self.ExceptionShortDescription
+            return f"{self.ExceptionShortDescription}"
     ExceptionShortDescription = "pythondialog generic exception"
 
 # For backward-compatibility
@@ -248,11 +248,7 @@ _common_args_syntax = {
 
 def _simple_option(option, enable):
     """Turn on or off the simplest dialog Common Options."""
-    if enable:
-        return (option,)
-    else:
-        # This will not add any argument to the command line
-        return ()
+    return (option, ) if enable else ()
 
 
 def _find_in_path(prog_name):
@@ -583,7 +579,7 @@ class Dialog:
         # even read them), but it is a bit late, now. So, we set them
         # based on the (global) _dialog_exit_status_vars.keys.
         for var in _dialog_exit_status_vars.keys():
-            varname = "DIALOG_" + var
+            varname = f"DIALOG_{var}"
             setattr(self, varname, _dialog_exit_status_vars[var])
 
         self._dialog_prg = _path_to_executable(dialog)
@@ -591,11 +587,7 @@ class Dialog:
         self.dialog_persistent_arglist = []
 
         # Use stderr or stdout?
-        if self.compat == "Xdialog":
-            # Default to stdout if Xdialog
-            self.use_stdout = True
-        else:
-            self.use_stdout = False
+        self.use_stdout = self.compat == "Xdialog"
         if use_stdout != None:
             # Allow explicit setting
             self.use_stdout = use_stdout

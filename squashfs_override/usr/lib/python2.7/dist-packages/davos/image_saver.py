@@ -53,7 +53,10 @@ class imageSaver(object):
             self.device = 'vda'
 
         # Start the image saver
-        error_code = subprocess.call('yes 2>/dev/null|/usr/sbin/ocs-sr %s savedisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_saver.log' % (self.manager.clonezilla_params['clonezilla_saver_params'], self.image_uuid, self.device), shell=True)
+        error_code = subprocess.call(
+            f"yes 2>/dev/null|/usr/sbin/ocs-sr {self.manager.clonezilla_params['clonezilla_saver_params']} savedisk {self.image_uuid} {self.device} 2>&1 1>/dev/null | tee /var/log/davos_saver.log",
+            shell=True,
+        )
 
         image_dir = os.path.join('/home/partimag/', self.image_uuid) + '/'
 
@@ -63,12 +66,18 @@ class imageSaver(object):
             open(saver_log_path, 'w').write(open('/var/log/davos_saver.log', 'r').read())
             time.sleep(15)
 
-        # Save image JSON and LOG
-        info = {}
         current_ts = time.strftime("%Y-%m-%d %H:%M:%S")
-        info['title'] = 'Image of %s at %s' % (self.manager.hostname, current_ts)
-        info['description'] = ''
-        info['size'] = sum(os.path.getsize(image_dir+f) for f in os.listdir(image_dir) if os.path.isfile(image_dir+f))
+        info = {
+            'title': f'Image of {self.manager.hostname} at {current_ts}',
+            'description': '',
+            'size': sum(
+                (
+                    os.path.getsize(image_dir + f)
+                    for f in os.listdir(image_dir)
+                    if os.path.isfile(image_dir + f)
+                )
+            ),
+        }
         info['has_error'] = (error_code == 0)
 
         log_path = os.path.join(image_dir, 'davos.log')
