@@ -99,6 +99,8 @@ class imageRestorer(object):
             self.device = 'sda'
         elif os.path.exists('/dev/hda'):
             self.device = 'hda'
+        elif os.path.exists('/dev/vda'):
+            self.device = 'vda'
 
         # Start the image restore
         if self.mode == 'multicast':
