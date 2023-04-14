@@ -443,11 +443,17 @@ EOF
     AddNewStartupGroupPolicy "C:\\mandriva_pulse2_newsidandname.bat"
 }
 
-CopyPulseAgent (){
+CopyPulseAgent () {
+	# Add this function for compatibility with old pulse version
+	echo "Please update your script with CopyAgent, CopyPulseAgent is deprecated"
+	CopyAgent $1
+}
+
+CopyAgent (){
     mkdir -p /mnt/Windows/Setup/Scripts/
     if [ -z "$1" ]; then
-        cp /opt/winutils/Pulse-Agent-windows-FULL-latest.exe /mnt/Windows/Setup/Scripts/
-        echo "Pulse-Agent-windows-FULL-latest.exe will be installed"
+        cp /opt/winutils/Medulla-Agent-windows-FULL-latest.exe /mnt/Windows/Setup/Scripts/
+        echo "Medulla-Agent-windows-FULL-latest.exe will be installed"
     else
         cp /opt/winutils/$1 /mnt/Windows/Setup/Scripts/
         echo "$1 will be installed"
