@@ -11,6 +11,7 @@ Medulla Davos client relies on open source technologies like python, c, hdt, clo
 * Discuss on IRC chanel [irc://irc.libera.chat](https://web.libera.chat/)
   * Channel : #medulla-fr
   * Channel : #medulla-en
+* Channel: https://discord.gg/JEFpWZVZ
 * Sources : <https://github.com/medulla-tech>
 * Bugtracker : Issues trackers are available on each component
 
