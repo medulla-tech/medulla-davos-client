@@ -59,7 +59,7 @@ class Inventory(object):
         data = dom.toxml()
 
         # Copy file to inventories folder on tftp server
-        self.logger.info('Uploading inventory to Pulse server')
+        self.logger.info('Uploading inventory to Medulla server')
         filehandler = open('/tmp' + self.macaddress + '.xml', 'w')
         filehandler.write(data)
         filehandler.close()

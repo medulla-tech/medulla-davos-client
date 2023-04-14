@@ -1,3 +1,15 @@
+pulse2-davos-client (0.51.0-0.20220118.jammy.3)  stable; urgency=low
+
+   * Rebranding to Medulla
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
+pulse2-davos-client (0.51.0-0.20220118.jammy.2)  stable; urgency=low
+
+   * Add support for vda partition 
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 07 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.51.0-0.20220118.jammy.1)  stable; urgency=low
 
    * New jammy snapshot

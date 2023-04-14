@@ -4,13 +4,13 @@ Priority: extra
 Maintainer: Nicolas Lécureuil <nicolas.lecureuil@siveo.net>
 Build-Depends: debhelper (>= 5.0.37.2)
 Standards-Version: 3.9.4
-Homepage: http://www.siveo.net
+Homepage: https://medulla-tech.io
 
 Package: pulse2-davos-client
 Architecture: all
 Depends: ${misc:Depends}
-Description: Pulse 2 Davos imaging client
- Pulse 2 Davos imaging client based on Clonezilla permit to create
+Description: Medulla 2 Davos imaging client
+ Medulla 2 Davos imaging client based on Clonezilla permit to create
  and restore disk images with advanced mastering functionnalities.
  .
- This package is a part of Mandriva Pulse2 solution.
+ This package is a part of Medulla solution.
