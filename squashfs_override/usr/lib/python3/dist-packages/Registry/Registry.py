@@ -16,7 +16,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from __future__ import print_function
+
 
 import sys
 import ntpath
@@ -180,7 +180,7 @@ class RegistryKey(object):
 
     def __str__(self):
         return "Registry Key %s with %d values and %d subkeys" % \
-            (self.path(), len(self.values()), len(self.subkeys()))
+            (self.path(), len(list(self.values())), len(self.subkeys()))
 
     def __getitem__(self, key):
         return self.value(key)
@@ -232,7 +232,7 @@ class RegistryKey(object):
             return []
 
         l = self._nkrecord.subkey_list()
-        return [RegistryKey(k) for k in l.keys()]
+        return [RegistryKey(k) for k in list(l.keys())]
 
     def subkey(self, name):
         """
@@ -243,7 +243,7 @@ class RegistryKey(object):
         if self._nkrecord.subkey_number() == 0:
             raise RegistryKeyNotFoundException(self.path() + "\\" + name)
 
-        for k in self._nkrecord.subkey_list().keys():
+        for k in list(self._nkrecord.subkey_list().keys()):
             if k.name().lower() == name.lower():
                 return RegistryKey(k)
         raise RegistryKeyNotFoundException(self.path() + "\\" + name)
@@ -256,7 +256,7 @@ class RegistryKey(object):
         empty list is returned.
         """
         try:
-            return [RegistryValue(v) for v in self._nkrecord.values_list().values()]
+            return [RegistryValue(v) for v in list(self._nkrecord.values_list().values())]
         except RegistryParse.RegistryStructureDoesNotExist:
             return []
 
@@ -269,7 +269,7 @@ class RegistryKey(object):
         if name == "(default)":
             name = ""
         try:
-            for v in self._nkrecord.values_list().values():
+            for v in list(self._nkrecord.values_list().values()):
                 if v.name().lower() == name.lower():
                     return RegistryValue(v)
         except RegistryParse.RegistryStructureDoesNotExist:

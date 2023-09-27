@@ -21,7 +21,7 @@
 
 import os, subprocess
 import logging
-from log import ColoredFormatter
+from .log import ColoredFormatter
 from davos.xmlrpc_client import pkgServerProxy
 import re
 
@@ -238,7 +238,7 @@ class davosManager(object):
         """
         answer = ""
         while answer not in ["y", "n"]:
-            answer = raw_input("You have entered %s. Is this correct [Y/N]? " % response).lower()
+            answer = input("You have entered %s. Is this correct [Y/N]? " % response).lower()
         return answer == "y"
 
     def setHostname(self):
@@ -247,13 +247,13 @@ class davosManager(object):
         """
         self.logger.info('Asking user for hostname')
         while True:
-            machinename = raw_input("Please enter the machine name: ")
+            machinename = input("Please enter the machine name: ")
             if self.is_valid_hostname(machinename):
                 if self.confirm(machinename):
                     self.hostname = machinename
                     break
             else:
-                print("The hostname %s entered is not valid." % machinename)
+                print(("The hostname %s entered is not valid." % machinename))
         # Setting hostname
         self.logger.info('Setting hostname: %s', self.hostname)
         os.environ['HOSTNAME'] = self.hostname

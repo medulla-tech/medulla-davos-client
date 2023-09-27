@@ -63,7 +63,7 @@ program) and you should be safe.
 
 """
 
-from __future__ import nested_scopes
+
 import sys, os, tempfile, random, string, re, types
 
 
@@ -192,7 +192,7 @@ try:
         r"(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)$")
     _timebox_time_rec = re.compile(
         r"(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)$")
-except re.error, v:
+except re.error as v:
     raise PythonDialogReModuleError(v)
 
 
@@ -277,7 +277,7 @@ def _find_in_path(prog_name):
                and os.access(file_path, os.R_OK | os.X_OK):
                 return file_path
         return None
-    except os.error, v:
+    except os.error as v:
         raise PythonDialogOSError(v.strerror)
 
 
@@ -313,7 +313,7 @@ def _path_to_executable(f):
                 raise ExecutableNotFound(
                     "can't find the executable for the dialog-like "
                     "program")
-    except os.error, v:
+    except os.error as v:
         raise PythonDialogOSError(v.strerror)
 
     return res
@@ -332,18 +332,18 @@ def _to_onoff(val):
         BadPythonDialogUsage
 
     """
-    if type(val) == types.IntType:
+    if type(val) == int:
         if val:
             return "on"
         else:
             return "off"
-    elif type(val) == types.StringType:
+    elif type(val) == bytes:
         try:
             if _on_rec.match(val):
                 return "on"
             elif _off_rec.match(val):
                 return "off"
-        except re.error, v:
+        except re.error as v:
             raise PythonDialogReModuleError(v)
     else:
         raise BadPythonDialogUsage("invalid boolean value: %s" % val)
@@ -370,7 +370,7 @@ def _compute_common_args(dict):
 
     """
     args = []
-    for key in dict.keys():
+    for key in list(dict.keys()):
         args.extend(_common_args_syntax[key](dict[key]))
     return args
 
@@ -396,11 +396,11 @@ def _create_temporary_directory():
                                    "%s-%u" \
                                    % ("pythondialog",
                                       random.randint(0, 2**30-1)))
-        except os.error, v:
+        except os.error as v:
             raise PythonDialogOSError(v.strerror)
 
         try:
-            os.mkdir(tmp_dir, 0700)
+            os.mkdir(tmp_dir, 0o700)
         except os.error:
             continue
         else:
@@ -582,7 +582,7 @@ class Dialog:
         # reason why the user would want to change their values or
         # even read them), but it is a bit late, now. So, we set them
         # based on the (global) _dialog_exit_status_vars.keys.
-        for var in _dialog_exit_status_vars.keys():
+        for var in list(_dialog_exit_status_vars.keys()):
             varname = "DIALOG_" + var
             setattr(self, varname, _dialog_exit_status_vars[var])
 
@@ -659,7 +659,7 @@ class Dialog:
             (child_rfd, child_wfd) = os.pipe()
             if redirect_child_stdin:
                 (child_stdin_rfd,  child_stdin_wfd)  = os.pipe()
-        except os.error, v:
+        except os.error as v:
             raise PythonDialogOSError(v.strerror)
 
         child_pid = os.fork()
@@ -713,7 +713,7 @@ class Dialog:
                 return (child_pid, child_rfd, child_stdin_wfd)
             else:
                 return (child_pid, child_rfd)
-        except os.error, v:
+        except os.error as v:
             raise PythonDialogOSError(v.strerror)
 
     def _wait_for_program_termination(self, child_pid, child_rfd):
@@ -800,7 +800,7 @@ class Dialog:
             # stderr to be closed (this is important, otherwise invoking
             # dialog enough times will eventually exhaust the maximum number
             # of open file descriptors).
-        except IOError, v:
+        except IOError as v:
             raise PythonDialogIOError(v)
 
         return (exit_code, child_output)
@@ -886,14 +886,14 @@ class Dialog:
         if code == self.DIALOG_OK:
             try:
                 mo = _calendar_date_rec.match(output)
-            except re.error, v:
+            except re.error as v:
                 raise PythonDialogReModuleError(v)
             
             if mo is None:
                 raise UnexpectedDialogOutput(
                     "the dialog-like program returned the following "
                     "unexpected date with the calendar box: %s" % output)
-            date = map(int, mo.group("day", "month", "year"))
+            date = list(map(int, mo.group("day", "month", "year")))
         else:
             date = None
         return (code, date)
@@ -1039,7 +1039,7 @@ class Dialog:
                 "stdin": os.fdopen(child_stdin_wfd, "wb"),
                 "child_rfd": child_rfd
                 }
-        except os.error, v:
+        except os.error as v:
             raise PythonDialogOSError(v.strerror)
             
     def gauge_update(self, percent, text="", update_text=0):
@@ -1072,7 +1072,7 @@ class Dialog:
 	try:
             self._gauge_process["stdin"].write(gauge_data)
             self._gauge_process["stdin"].flush()
-        except IOError, v:
+        except IOError as v:
             raise PythonDialogIOError(v)
     
     # For "compatibility" with the old dialog.py...
@@ -1100,7 +1100,7 @@ class Dialog:
         # Close the pipe that we are using to feed dialog's stdin
         try:
             p["stdin"].close()
-        except IOError, v:
+        except IOError as v:
             raise PythonDialogIOError(v)
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
@@ -1254,7 +1254,7 @@ class Dialog:
 
         output = self._strip_xdialog_newline(output)
         
-        if "help_button" in kwargs.keys() and output.startswith("HELP "):
+        if "help_button" in list(kwargs.keys()) and output.startswith("HELP "):
             return ("help", output[5:])
         else:
             return (code, output)
@@ -1415,7 +1415,7 @@ class Dialog:
                 f.close()
 
                 # Ask for an empty title unless otherwise specified
-                if not "title" in kwargs.keys():
+                if not "title" in list(kwargs.keys()):
                     kwargs["title"] = ""
 
                 return self._perform(
@@ -1426,9 +1426,9 @@ class Dialog:
                     f.close()           # Safe, even several times
                     os.unlink(fName)
                 os.rmdir(tmp_dir)
-        except os.error, v:
+        except os.error as v:
             raise PythonDialogOSError(v.strerror)
-        except IOError, v:
+        except IOError as v:
             raise PythonDialogIOError(v)
 
     def tailbox(self, filename, height=20, width=60, **kwargs):
@@ -1483,7 +1483,7 @@ class Dialog:
 	"""
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
-        if not "title" in kwargs.keys():
+        if not "title" in list(kwargs.keys()):
 	    kwargs["title"] = filename
 	return self._perform(
             *(["--textbox", filename, str(height), str(width)],),
@@ -1532,8 +1532,8 @@ class Dialog:
                     raise UnexpectedDialogOutput(
                         "the dialog-like program returned the following "
                         "unexpected time with the --timebox option: %s" % output)
-                time = map(int, mo.group("hour", "minute", "second"))
-            except re.error, v:
+                time = list(map(int, mo.group("hour", "minute", "second")))
+            except re.error as v:
                 raise PythonDialogReModuleError(v)
         else:
             time = None

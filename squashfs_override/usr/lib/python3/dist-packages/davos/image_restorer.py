@@ -23,10 +23,10 @@ import os
 import subprocess
 import json
 import time
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from davos.inventory import Inventory
 from time import sleep
-from dialog import Dialog
+from .dialog import Dialog
 
 class imageRestorer(object):
 
@@ -167,14 +167,14 @@ class imageRestorer(object):
             for m in mirrors:
                 try:
                     base_url = 'https://%s:9990%s_files/%s/' % (self.manager.server, m, pid)
-                    res = urllib2.urlopen(base_url + 'MD5SUMS', context=rpc.ctx)
+                    res = urllib.request.urlopen(base_url + 'MD5SUMS', context=rpc.ctx)
                     files = [l[32:].strip() for l in res.read().strip().split('\n')]
 
-                    json_data = json.loads(urllib2.urlopen(base_url + 'conf.json', context=rpc.ctx).read())
+                    json_data = json.loads(urllib.request.urlopen(base_url + 'conf.json', context=rpc.ctx).read())
 
                     downloads[pid] = {'mirror': m, 'files': files, 'json': json_data}
                     break
-                except Exception, e:
+                except Exception as e:
                     self.logger.debug('Unable to locate %s in %s', pid, m)
                     self.logger.debug('Download error: %s', str(e))
 
@@ -197,7 +197,7 @@ class imageRestorer(object):
         else:
             bash_path = '"C:\\Program Files\\Mandriva\\OpenSSH\\bin\\bash.exe"'
 
-        for pid, info in downloads.iteritems():
+        for pid, info in downloads.items():
             # If no mirror found, skip this pid
             if info is None:
                 self.logger.warning('Cannot get a valid mirror for package %s', pid)
@@ -225,13 +225,13 @@ class imageRestorer(object):
             # Download package files
             for fname in info['files']:
                 try:
-                    url = 'https://%s:9990%s_files/%s/%s' % (self.manager.server, info['mirror'], pid, urllib.quote(fname))
+                    url = 'https://%s:9990%s_files/%s/%s' % (self.manager.server, info['mirror'], pid, urllib.parse.quote(fname))
 
                     self.logger.info('Downloading %s file for %s package', fname, pkg_name)
-                    res = urllib2.urlopen(url, context=rpc.ctx)
+                    res = urllib.request.urlopen(url, context=rpc.ctx)
                     with open(os.path.join(pkg_path, fname), "wb") as f:
                         f.write(res.read())
-                except Exception, e:
+                except Exception as e:
                     self.logger.error('Unable to download %s for %s package', fname, pkg_name)
                     self.logger.error(str(e))
                     break

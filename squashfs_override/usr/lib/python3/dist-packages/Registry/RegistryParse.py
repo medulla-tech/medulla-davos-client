@@ -18,8 +18,8 @@
 #   limitations under the License.
 
 # Added for python2-3 compatibility
-from __future__ import print_function
-from __future__ import unicode_literals
+
+
 
 import struct
 from datetime import datetime
@@ -289,7 +289,7 @@ class REGFBlock(RegistryBlock):
         yield h
 
         while h.has_next():
-            h = h.next()
+            h = next(h)
             yield h
 
 
@@ -330,7 +330,7 @@ class HBINCell(RegistryBlock):
         else:
             return self._size * -1
 
-    def next(self):
+    def __next__(self):
         """
         Returns the next HBINCell, which is located immediately after this.
         Note: This will always return an HBINCell starting at the next location
@@ -968,7 +968,7 @@ class RIRecord(SubkeyList):
         super(RIRecord, self).__init__(buf, offset, parent)
 
     def __str__(self):
-        return "RIRecord(Length: %d) at 0x%x" % (len(self.keys()), self.offset())
+        return "RIRecord(Length: %d) at 0x%x" % (len(list(self.keys())), self.offset())
 
     def keys(self):
         """
@@ -982,7 +982,7 @@ class RIRecord(SubkeyList):
             d = HBINCell(self._buf, key_offset, self)
 
             try:
-                for k in d.child().keys():
+                for k in list(d.child().keys()):
                     yield k
             except RegistryStructureDoesNotExist:
                 raise ParseException("Unsupported subkey list encountered.")
@@ -1328,7 +1328,7 @@ class HBINBlock(RegistryBlock):
         except (ParseException, struct.error):
             return False
 
-    def next(self):
+    def __next__(self):
         """
         Get the next HBIN after this one.
         Note: This will blindly attempts to create it regardless of if it exists.
@@ -1343,7 +1343,7 @@ class HBINBlock(RegistryBlock):
 
         while c.offset() < self._offset_next_hbin:
             yield c
-            c = c.next()
+            c = next(c)
 
     def records(self):
         """
@@ -1355,6 +1355,6 @@ class HBINBlock(RegistryBlock):
         while c.offset() < self._offset_next_hbin:
             yield c
             try:
-                c = c.next()
+                c = next(c)
             except RegistryStructureDoesNotExist:
                 break

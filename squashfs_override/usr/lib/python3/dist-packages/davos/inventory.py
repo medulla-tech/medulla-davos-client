@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from xml.dom.minidom import parse
 import tftpy
 import psutil
@@ -90,7 +90,7 @@ class Inventory(object):
         # ======== OS SECTION ===============================================
 
         cv_dict = {}
-        for entry in reg.open('Microsoft\\Windows NT\\CurrentVersion').values():
+        for entry in list(reg.open('Microsoft\\Windows NT\\CurrentVersion').values()):
             cv_dict[entry.name()] = entry.value()
 
         if 'ProductName' in cv_dict:
@@ -121,7 +121,7 @@ class Inventory(object):
 
         for key in soft_keys:
             soft_dict = {}
-            for entry in key.values():
+            for entry in list(key.values()):
                 try:
                     soft_dict[entry.name()] = entry.value().encode('ascii', 'ignore')
                 except:

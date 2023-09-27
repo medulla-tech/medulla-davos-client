@@ -1,4 +1,4 @@
-import ssl, xmlrpclib
+import ssl, xmlrpc.client
 
 class pkgServerProxy(object):
 
@@ -17,6 +17,6 @@ class pkgServerProxy(object):
     def __getattr__(self, attr_name):
         # Return the corresponding api proxy according to attr
         url = self.base_url + attr_name + '/'
-        return xmlrpclib.ServerProxy(url, context=self.ctx)
+        return xmlrpc.client.ServerProxy(url, context=self.ctx)
 
 
