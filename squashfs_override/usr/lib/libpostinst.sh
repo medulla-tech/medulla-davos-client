@@ -56,6 +56,30 @@ CopySysprep ()
     fi
 }
 
+<ProductKey>HYF8J-CVRMY-CM74G-RPHKF-PW487</ProductKey>
+
+
+UseOEMBiosLicence ()
+{
+    SYSPREP_FILE=/opt/sysprep/$1
+    WINDIR=$(find /mnt -maxdepth 1 -type d -iname windows)
+    WINSYSDIR=$(find $WINDIR -maxdepth 1 -type d -iname system32)
+
+    # Retreive OEM licence from bios
+    OEM_KEY = $(strings /sys/firmware/acpi/tables/msdm | tail -1)
+
+    # Warning ! There's a ^M after $HOSTNAME for DOS compatibility
+    SYSPREP=sysprep
+    [ -d /mnt/Sysprep ] && SYSPREP=Sysprep
+
+    if [ ${SYSPREP_FILE#*.} == "xml" ]; then
+        rm -f $WINSYSDIR/sysprep/*.xml
+        sed -e "s/<ProductKey>.*$/<ProductKey>${OEM_KEY}<\/ProductKey>"`echo -e "\015"`"/" < $SYSPREP_FILE > /mnt/Windows/Panther/unattend.xml
+    fi
+
+    # inf file is deprecated
+}
+
 #
 # Return the name of the Nth partition
 #
@@ -491,3 +515,8 @@ Debug (){
     ls /mnt/Windows/Panther/ > /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-direct-panther
 
 }
+
+# Source external postinstall script
+if [ -f /opt/winutils/postinstall.sh ]; then
+  source /opt/winutils/postinstall.sh
+fi
