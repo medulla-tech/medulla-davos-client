@@ -21,8 +21,7 @@ cp /etc/resolv.conf ./etc/resolv.conf
 chroot . bash -c 'mkdir /boot'
 chroot . bash -c 'apt update && apt -y install apt-utils python3-minimal libpython3-stdlib fusioninventory-agent dos2unix linux-firmware efivar ash python3-six python3-pip && exit'
 
-chroot . bash -c 'python3 -m pip install tftpy'
-#chroot . bash -c 'dpkg -i partclone_0.2.89-4_amd64.deb clonezilla_3.21.13-1_all.deb drbl_2.20.11-1_all.deb'
+chroot . bash -c 'python3 -m pip install --break-system-packages tftpy'
 chroot . bash -c 'ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service'
 chroot . bash -c 'rm -frv /opt/*'
 chroot . bash -c 'echo efivars >> /etc/modules'
