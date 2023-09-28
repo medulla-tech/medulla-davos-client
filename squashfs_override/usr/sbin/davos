@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 #
 # (c) 2007-2015 Mandriva, http://www.mandriva.com/
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         # Wait for machine registration
         time.sleep(int(mgr.timereboot))
     else:
-        print 'Unknown action, leaving'
+        print('Unknown action, leaving')
         #mgr.runInShell('reboot')
 
     # Reboot at the end
