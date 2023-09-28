@@ -5,7 +5,6 @@ class pkgServerProxy(object):
     def __init__(self, ip):
         self.logger = logging.getLogger('davos')
         self.log_level = level = logging.INFO #logging.DEBUG
-        self.logger.error('USA')
         # Creating SSL context
         self.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         self.ctx.check_hostname = False
@@ -16,7 +15,6 @@ class pkgServerProxy(object):
         # We could pass them if we upgrade to grub2
         self.base_url = "https://%s:9990/" % ip
 
-        self.logger.error('LA URL EST: %s' % self.base_url)
     def __getattr__(self, attr_name):
         # Return the corresponding api proxy according to attr
         url = self.base_url + attr_name + '/'
