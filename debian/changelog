@@ -1,3 +1,9 @@
+pulse2-davos-client (0.52.0-0.20231004.mantic.1)  stable; urgency=low
+
+   * New mantic snapshot
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.51.0-0.20220118.jammy.3)  stable; urgency=low
 
    * Rebranding to Medulla
