@@ -35,6 +35,7 @@ Strip2 ()
 # If the extension is .xml it assumes that the target is Windows Vista/Seven/2008
 # If the extension is .inf the file will be copied to c:\Sysprep.inf (Windows XP)
 #
+
 CopySysprep ()
 {
     SYSPREP_FILE=/opt/sysprep/$1
@@ -48,36 +49,33 @@ CopySysprep ()
     if [ ${SYSPREP_FILE#*.} == "xml" ]; then
         rm -f $WINSYSDIR/sysprep/*.xml
         sed -e "s/<ComputerName>.*$/<ComputerName>${HOSTNAME}<\/ComputerName>"`echo -e "\015"`"/" < $SYSPREP_FILE > /mnt/Windows/Panther/unattend.xml
+        sed "s/ComputerName\":\".*\",\"ShowWindowsLive/ComputerName\":\""${HOSTNAME}"\",\"ShowWindowsLive/" -i /mnt/Windows/Panther/unattend.xml
     fi
 
     if [ ${SYSPREP_FILE#*.} == "inf" ]; then
         rm -f /mnt/$SYSPREP/[Ss]ysprep.inf
-        sed -e "s/^[	]*[Cc]omputer[Nn]ame[^\n\r]*/ComputerName=$HOSTNAME"`echo -e "\015"`"/" < $SYSPREP_FILE >/mnt/$SYSPREP/Sysprep.inf
+        sed -e "s/^[    ]*[Cc]omputer[Nn]ame[^\n\r]*/ComputerName=$HOSTNAME"`echo -e "\015"`"/" < $SYSPREP_FILE >/mnt/$SYSPREP/Sysprep.inf
     fi
+    unix2dos /mnt/Windows/Panther/unattend.xml 2>1 > /dev/null
 }
 
-<ProductKey>HYF8J-CVRMY-CM74G-RPHKF-PW487</ProductKey>
-
-
 UseOEMBiosLicence ()
-{
-    SYSPREP_FILE=/opt/sysprep/$1
-    WINDIR=$(find /mnt -maxdepth 1 -type d -iname windows)
-    WINSYSDIR=$(find $WINDIR -maxdepth 1 -type d -iname system32)
-
+{   
     # Retreive OEM licence from bios
-    OEM_KEY = $(strings /sys/firmware/acpi/tables/msdm | tail -1)
+    OEM_KEY=$(strings /sys/firmware/acpi/tables/MSDM | tail -1)
+    Key1=$(echo $OEM_KEY |cut -d "-" -f1)
+    Key2=$(echo $OEM_KEY |cut -d "-" -f2)
+    Key3=$(echo $OEM_KEY |cut -d "-" -f3)
+    Key4=$(echo $OEM_KEY |cut -d "-" -f4)
+    Key5=$(echo $OEM_KEY |cut -d "-" -f5)  
+    sed "s/<ProductKey>.*$/<ProductKey>${OEM_KEY}<\/ProductKey>"`echo -e "\015"`"/" -i /mnt/Windows/Panther/unattend.xml
+    sed "s/ProductKey1\":\".*\",\"ProductKey2/ProductKey1\":\""$Key1"\",\"ProductKey2/" -i /mnt/Windows/Panther/unattend.xml
+    sed "s/ProductKey2\":\".*\",\"ProductKey3/ProductKey2\":\""$Key2"\",\"ProductKey3/" -i /mnt/Windows/Panther/unattend.xml
+    sed "s/ProductKey3\":\".*\",\"ProductKey4/ProductKey3\":\""$Key3"\",\"ProductKey4/" -i /mnt/Windows/Panther/unattend.xml
+    sed "s/ProductKey4\":\".*\",\"ProductKey5/ProductKey4\":\""$Key4"\",\"ProductKey5/" -i /mnt/Windows/Panther/unattend.xml
+    sed "s/ProductKey5\":\".*\",\"CopyProfile/ProductKey5\":\""$Key5"\",\"CopyProfile/" -i /mnt/Windows/Panther/unattend.xml
 
-    # Warning ! There's a ^M after $HOSTNAME for DOS compatibility
-    SYSPREP=sysprep
-    [ -d /mnt/Sysprep ] && SYSPREP=Sysprep
-
-    if [ ${SYSPREP_FILE#*.} == "xml" ]; then
-        rm -f $WINSYSDIR/sysprep/*.xml
-        sed -e "s/<ProductKey>.*$/<ProductKey>${OEM_KEY}<\/ProductKey>"`echo -e "\015"`"/" < $SYSPREP_FILE > /mnt/Windows/Panther/unattend.xml
-    fi
-
-    # inf file is deprecated
+    unix2dos /mnt/Windows/Panther/unattend.xml 2>1 > /dev/null
 }
 
 #
