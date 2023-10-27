@@ -182,6 +182,11 @@ class davosManager(object):
 
         self.clonezilla_params = self.rpc.imaging_api.getClonezillaParamsForTarget(self.host_uuid)
 
+    def getITSMAgent(self):
+        """
+        Get the itsm agent to be used on the inventory based the on Glpi/Itsm version used
+        """
+        return self.rpc.imaging_api.getITSMAgen()
 
     def mountNFSShares(self):
         # Server address

@@ -16,8 +16,9 @@ class Inventory(object):
         self.logger = manager.logger
         self.manager = manager
         self.disk = 'sda'
+        self.itsm_agent = self.manager.getITSMAgen()
         self.logger.info('Running inventory')
-        o, e, ec = manager.runInShell('fusioninventory-agent --local /tmp --no-category=software,user,process,environment,controller,memory,drive,usb,slot,input,port')
+        o, e, ec = manager.runInShell('%s --local /tmp --no-category=software,user,process,environment,controller,memory,drive,usb,slot,input,port' % self.itsm_agent)
         o2, e2, ec = manager.runInShell('mv /tmp/*.ocs /tmp/inventory.xml')
 
         # Check if an error occured
