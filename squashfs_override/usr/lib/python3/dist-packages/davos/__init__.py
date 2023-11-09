@@ -75,6 +75,11 @@ class davosManager(object):
             self.timereboot = 2
 
         try:
+            self.inventory_agent = self.kernel_params['inventory_agent']
+        except KeyError:
+            self.inventory_agent = "fusioninventory-agent"
+
+        try:
             self.tftp_ip = self.kernel_params['tftp_ip']
         except KeyError:
             self.tftp_ip = self.server
