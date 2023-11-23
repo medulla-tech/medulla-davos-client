@@ -105,7 +105,7 @@ class imageRestorer(object):
         # Start the image restore
         if self.mode == 'multicast':
             if self.manager.clonezilla_params['clonezilla_restorer_params'] is False:
-                self.manager.clonezilla_params['clonezilla_restorer_params'] = "-scr -icrc -icds -nogui -g auto -e1 auto -e2 -c -r -j2 -p true"
+                self.manager.clonezilla_params['clonezilla_restorer_params'] = "-scr -icrc -icds -g auto -e1 auto -e2 -c -r -j2 -p true"
 
             error_code = subprocess.call('yes 2>/dev/null| /usr/sbin/ocs-sr %s --mcast-port 2232 multicast_restoredisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_restorer.log' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
         else:
