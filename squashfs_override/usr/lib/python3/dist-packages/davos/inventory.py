@@ -61,11 +61,11 @@ class Inventory(object):
 
         # Copy file to inventories folder on tftp server
         self.logger.info('Uploading inventory to Medulla server')
-        filehandler = open('/tmp' + self.macaddress + '.xml', 'w')
+        filehandler = open('/tmp/' + self.macaddress + '.xml', 'w')
         filehandler.write(data)
         filehandler.close()
         tftpclient = tftpy.TftpClient(manager.tftp_ip, 69)
-        tftpclient.upload('/' + manager.dump_path + '/' + self.macaddress + '.xml', '/tmp' + self.macaddress + '.xml')
+        tftpclient.upload('/' + manager.dump_path + '/' + self.macaddress + '.xml', '/tmp/' + self.macaddress + '.xml')
 
 
     @property
