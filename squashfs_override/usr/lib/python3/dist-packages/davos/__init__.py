@@ -252,6 +252,22 @@ class davosManager(object):
         """
         self.logger.info('Asking user for hostname')
         while True:
+            if "placeholder" in self.kernel_params and self.kernel_params["placeholder"] != "":
+                placeholder = self.kernel_params["placeholder"]
+                if self.is_valid_hostname(placeholder) is False:
+                    self.kernel_params["placeholder"] = ""
+                    placeholder = ""
+                    del self.kernel_params["placeholder"]
+                    del placeholder
+                    continue
+
+                choice = input("Do you want the name %s (y/n)"%placeholder)
+                if choice == "y":
+                    self.hostname = placeholder
+                    del self.kernel_params["placeholder"]
+                    del placeholder
+                    break
+
             machinename = input("Please enter the machine name: ")
             if self.is_valid_hostname(machinename):
                 if self.confirm(machinename):
