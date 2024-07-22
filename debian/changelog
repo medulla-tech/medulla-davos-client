@@ -1,3 +1,9 @@
+pulse2-davos-client (0.53.0-0.20240715.oracular.1)  stable; urgency=low
+
+   * New Oracular snapshot
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.52.0-0.20231004.mantic.1)  stable; urgency=low
 
    * New mantic snapshot
