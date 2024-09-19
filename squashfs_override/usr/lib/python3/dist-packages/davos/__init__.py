@@ -24,6 +24,8 @@ import logging
 from .log import ColoredFormatter
 from davos.xmlrpc_client import pkgServerProxy
 import re
+import shutil
+import subprocess
 
 class davosManager(object):
 
@@ -65,6 +67,11 @@ class davosManager(object):
             self.nfs_share_postinst = '/var/lib/pulse2/imaging/postinst/'
 
         try:
+            self.nfs_share_certs = self.kernel_params['nfs_share_certs']
+        except KeyError:
+            self.nfs_share_certs = '/var/lib/pulse2/imaging/certs'
+
+        try:
             self.dump_path = self.kernel_params['dump_path']
         except KeyError:
             self.dump_path = 'inventories'
@@ -97,6 +104,8 @@ class davosManager(object):
             self.getClonezillaParams()
             # Mount NFS Shares
             self.mountNFSShares()
+            # Import root certificate
+            self.addRootCertificate()
             # Partimag symlink
             self.createPartimagSymlink()
 
@@ -214,6 +223,18 @@ class davosManager(object):
                 self.logger.error('Cannot mount %s Share', local_dir)
                 self.logger.error('Output: %s', e)
 
+        # Certs share
+        certs_dir = '/mnt/certs'
+        if not os.path.exists(certs_dir):
+            os.mkdir(certs_dir)
+
+        if self.isEmptyDir(certs_dir):
+            self.logger.info('Mounting %s NFS Share', certs_dir)
+            o, e, ec = self.runInShell('mount %s:%s %s' % (server, self.nfs_share_certs, certs_dir))
+            if ec != 0:
+                self.logger.error('Cannot mount %s Share', certs_dir)
+                self.logger.error('Output: %s', e)
+
     def createPartimagSymlink(self):
         # Remove /home/partimag dir
         if self.isEmptyDir('/home/partimag'):
@@ -280,3 +301,29 @@ class davosManager(object):
         os.environ['HOSTNAME'] = self.hostname
         self.runInShell('hostname ' + self.hostname)
         self.runInShell('sed -i "s/debian/' + self.hostname + '/" /etc/hosts')
+
+    def addRootCertificate(self):
+        """
+        Add the main medulla certificate as trusted on the davos
+        """
+        self.logger.info("Adding Medulla certificate")
+
+        CertFile = os.path.join("/mnt", "certs", "pulse-ca-chain.crt")
+        CertDest = os.path.join("/usr", "local", "share", "ca-certificates")
+
+        try:
+            shutil.copy(CertFile, CertDest)
+        except PermissionError:
+            self.logger.error("Permission issue. Please contact siveo support")
+        except FileNotFoundError:
+            self.logger.error("We cannot find the source file")
+        except Exception as e:
+            self.logger.error(f"An error occured : {e}")
+
+        try:
+            result = subprocess.run(['update-ca-certificates'], check=True, text=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"An error occured while playing the command : {e}")
+            self.logger.error(e.stderr)
+        except Exception as e:
+            self.logger.error(f"An error occured : {e}")
