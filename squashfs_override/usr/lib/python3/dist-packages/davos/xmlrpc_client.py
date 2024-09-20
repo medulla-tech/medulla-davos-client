@@ -4,11 +4,15 @@ import logging
 class pkgServerProxy(object):
     def __init__(self, ip):
         self.logger = logging.getLogger('davos')
-        self.log_level = level = logging.INFO #logging.DEBUG
+        self.log_level = level = logging.DEBUG #logging.DEBUG
         # Creating SSL context
         self.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         self.ctx.check_hostname = False
-        self.ctx.verify_mode = ssl.CERT_NONE
+        self.ctx.verify_mode = ssl.CERT_REQUIRED
+        self.ctx.load_verify_locations(cafile="/usr/local/share/ca-certificates/pulse-ca-chain.crt")
+
+        context = ssl.create_default_context()
+        context.set_ciphers('ALL')
 
         # Building url (dirty, port and protocol are hardcoded
         # but we are limited by grub command line max length
