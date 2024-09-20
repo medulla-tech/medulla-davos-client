@@ -98,14 +98,14 @@ class davosManager(object):
             # Define hostname
             self.setHostname()
         else:
+            # Import root certificate
+            self.addRootCertificate()
             # Get hostname and uuid
             self.getHostInfo()
             # Clonezilla parameters
             self.getClonezillaParams()
             # Mount NFS Shares
             self.mountNFSShares()
-            # Import root certificate
-            self.addRootCertificate()
             # Partimag symlink
             self.createPartimagSymlink()
 
