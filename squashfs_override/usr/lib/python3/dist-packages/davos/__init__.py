@@ -91,6 +91,11 @@ class davosManager(object):
         except KeyError:
             self.tftp_ip = self.server
 
+        # Mount NFS Shares
+        self.mountNFSShares()
+        # Import root certificate
+        self.addRootCertificate()
+
         # Init XMLRPC Client
         self.rpc = pkgServerProxy(self.server)
 
@@ -98,14 +103,10 @@ class davosManager(object):
             # Define hostname
             self.setHostname()
         else:
-            # Import root certificate
-            self.addRootCertificate()
             # Get hostname and uuid
             self.getHostInfo()
             # Clonezilla parameters
             self.getClonezillaParams()
-            # Mount NFS Shares
-            self.mountNFSShares()
             # Partimag symlink
             self.createPartimagSymlink()
 
