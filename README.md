@@ -12,10 +12,7 @@ For large and complexe installation, follow this [links](https://github.com/medu
 
 ## Community
 
-* Discord Channel: https://discord.gg/Mj8wGGp4yH
-* Discuss on IRC chanel [irc://irc.libera.chat](https://web.libera.chat/)
-  * Channel : #medulla-fr
-  * Channel : #medulla-en
+* Discuss on Discord Channel: https://discord.gg/Mj8wGGp4yH
 
 If you find some errors, please feel free to contribute.
 
