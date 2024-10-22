@@ -109,7 +109,7 @@ class davosManager(object):
             self.setHostname()
         else:
             # Set imaging Server IP in hosts
-            self.setImagingServerHost
+            self.setImagingServerHost()
             # Get hostname and uuid
             self.getHostInfo()
             # Clonezilla parameters
