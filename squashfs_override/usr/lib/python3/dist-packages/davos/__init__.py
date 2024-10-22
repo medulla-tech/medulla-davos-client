@@ -111,7 +111,7 @@ class davosManager(object):
             # Get hostname and uuid
             self.getHostInfo()
             # Set imaging Server IP in hosts
-            setImagingServerHost
+            self.setImagingServerHost()
             # Clonezilla parameters
             self.getClonezillaParams()
             # Partimag symlink
@@ -202,7 +202,9 @@ class davosManager(object):
         even if there is no DHCP server
         """
 
-        self.runInShell('echo self.server   self.fqdn >> /etc/hosts')
+        with open('/etc/hosts', 'a') as f:
+            # Ajouter la ligne avec host et ip, séparés par un espace
+            f.write(f"{self.server} {self.fqdn}\n")
 
     def getClonezillaParams(self):
         """
