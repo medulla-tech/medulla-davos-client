@@ -1,3 +1,16 @@
+pulse2-davos-client (0.53.0-0.20241002.oracular.2)  stable; urgency=low
+
+   * Manually install setuptools (not available in ubuntu anymore)
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
+pulse2-davos-client (0.53.0-0.20241002.oracular.1)  stable; urgency=low
+
+   * New Oracular version
+   * Fix some certificate issues
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.53.0-0.20240715.oracular.4)  stable; urgency=low
 
    * Fix some certificate issues
