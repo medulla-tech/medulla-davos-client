@@ -1,3 +1,9 @@
+pulse2-davos-client (0.53.0-0.20241002.oracular.6)  stable; urgency=low
+
+   * Fix yet an other typo
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.53.0-0.20241002.oracular.5)  stable; urgency=low
 
    * Set the hosts file earlier
