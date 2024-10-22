@@ -108,10 +108,10 @@ class davosManager(object):
             # Define hostname
             self.setHostname()
         else:
+            # Set imaging Server IP in hosts
+            self.setImagingServerHost
             # Get hostname and uuid
             self.getHostInfo()
-            # Set imaging Server IP in hosts
-            self.setImagingServerHost()
             # Clonezilla parameters
             self.getClonezillaParams()
             # Partimag symlink
