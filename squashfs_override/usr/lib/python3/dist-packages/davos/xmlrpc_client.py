@@ -2,7 +2,7 @@ import ssl, xmlrpc.client
 import logging
 
 class pkgServerProxy(object):
-    def __init__(self, ip):
+    def __init__(self, ip, fqdn):
         self.logger = logging.getLogger('davos')
         self.log_level = level = logging.DEBUG #logging.DEBUG
         # Creating SSL context
@@ -17,7 +17,7 @@ class pkgServerProxy(object):
         # Building url (dirty, port and protocol are hardcoded
         # but we are limited by grub command line max length
         # We could pass them if we upgrade to grub2
-        self.base_url = "https://%s:9990/" % ip
+        self.base_url = "https://%s:9990/" % fqdn
 
     def __getattr__(self, attr_name):
         # Return the corresponding api proxy according to attr

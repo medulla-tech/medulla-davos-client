@@ -82,6 +82,11 @@ class davosManager(object):
             self.timereboot = 2
 
         try:
+            self.fqdn = self.kernel_params['fqdn']
+        except KeyError:
+            self.fqdn = "pulse"
+
+        try:
             self.inventory_agent = self.kernel_params['inventory_agent']
         except KeyError:
             self.inventory_agent = "fusioninventory-agent"
@@ -97,7 +102,7 @@ class davosManager(object):
         self.addRootCertificate()
 
         # Init XMLRPC Client
-        self.rpc = pkgServerProxy(self.server)
+        self.rpc = pkgServerProxy(self.server, self.fqdn)
 
         if self.action == 'REGISTER':
             # Define hostname
@@ -105,6 +110,8 @@ class davosManager(object):
         else:
             # Get hostname and uuid
             self.getHostInfo()
+            # Set imaging Server IP in hosts
+            setImagingServerHost
             # Clonezilla parameters
             self.getClonezillaParams()
             # Partimag symlink
@@ -188,6 +195,14 @@ class davosManager(object):
         self.host_entity = self.host_data['entity']
         self.logger.info('Got entity: %s', self.host_entity)
 
+
+    def setImagingServerHost(self):
+        """
+        Add the imaging server in the hosts file so we can contact it
+        even if there is no DHCP server
+        """
+
+        self.runInShell('echo self.server   self.fqdn >> /etc/hosts')
 
     def getClonezillaParams(self):
         """
