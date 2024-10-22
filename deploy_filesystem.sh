@@ -21,6 +21,7 @@ cp /etc/resolv.conf ./etc/resolv.conf
 chroot . bash -c 'mkdir /boot'
 chroot . bash -c 'apt update && apt -y install apt-utils python3-minimal libpython3-stdlib fusioninventory-agent dos2unix linux-firmware efivar python3-six python3-pip && exit'
 
+chroot . bash -c 'python3 -m pip install --break-system-packages setuptools'
 chroot . bash -c 'python3 -m pip install --break-system-packages tftpy'
 chroot . bash -c 'wget https://github.com/glpi-project/glpi-agent/releases/download/1.5/glpi-agent_1.5-1_all.deb'
 chroot . bash -c 'apt install ./glpi-agent_1.5-1_all.deb'
