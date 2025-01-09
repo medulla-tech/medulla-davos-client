@@ -254,14 +254,17 @@ class davosManager(object):
                 self.logger.error('Output: %s', e)
 
     def createPartimagSymlink(self):
-        # Remove /home/partimag dir
-        if self.isEmptyDir('/home/partimag'):
-            self.logger.debug('Removing dir: %s', '/home/partimag')
-            os.rmdir('/home/partimag')
+        try:
+            # Remove /home/partimag dir
+            if self.isEmptyDir('/home/partimag'):
+                self.logger.debug('Removing dir: %s', '/home/partimag')
+                os.rmdir('/home/partimag')
    
-            # Create a symlink to /masters remote directory
-            self.logger.debug('Creating symlink to: %s', '/imaging_server/masters')
-            os.symlink('/imaging_server/masters', '/home/partimag')
+                # Create a symlink to /masters remote directory
+                self.logger.debug('Creating symlink to: %s', '/imaging_server/masters')
+                os.symlink('/imaging_server/masters', '/home/partimag')
+        except OSError as e:
+            self.logger.error('Error creating symlink: %s', e)
 
     def is_valid_hostname(self,hostname):
         """
