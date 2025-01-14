@@ -294,7 +294,7 @@ def _find_in_path(prog_name):
         # Note that the leading empty component in the default value for PATH
         # could lead to the returned path not being absolute.
         PATH = os.getenv("PATH", ":/bin:/usr/bin")  # see the execvp(3) man page
-        for dir in string.split(PATH, ":"):
+        for dir in PATH.split(":"):
             file_path = os.path.join(dir, prog_name)
             if os.path.isfile(file_path) and os.access(file_path, os.R_OK | os.X_OK):
                 return file_path
@@ -979,7 +979,7 @@ class Dialog:
         # Since we used --separate-output, the tags are separated by a newline
         # in the output. There is also a final newline after the last tag.
         if output:
-            return (code, string.split(output, "\n")[:-1])
+            return (code, output.split("\n")[:-1])
         else:  # empty selection
             return (code, [])
 

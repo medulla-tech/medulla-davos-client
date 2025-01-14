@@ -77,5 +77,13 @@ class imageSaver(object):
         open(log_path, 'w').write(open('/var/log/davos.log', 'r').read())
         open(json_path, 'w').write(json.dumps(info))
 
+        # after an amount of time, xmlrpc goes on "timeout"
+        # this try-except is here to "force" xmlrpc to reconnect
+        # Thanks to this, the imageDone call will not have a ssl connect problem
+        try:
+            self.imaging_api.getComputerByMac(self.manager.mac)
+        except:
+            pass
+
         # Send save img request
         self.imaging_api.imageDone(self.manager.mac, self.image_uuid)
