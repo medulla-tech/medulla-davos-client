@@ -193,7 +193,7 @@ class imageRestorer(object):
             postinst = self.manager.rpc.imaging_api.getPostInstalls(image_uuid, target_uuid)
         self.write_postinstalls(image_uuid, postinst)
         self.setlibpostinstVars()
-        subprocess.call('davos_postimaging')
+        subprocess.call(['davos_postimaging', image_uuid])
 
     def apply_convergence(self):
 

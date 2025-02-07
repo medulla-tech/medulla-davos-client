@@ -1,4 +1,5 @@
 #!/bin/bash
+IMAGE_UUID=$1
 postinst_dir="/imaging_server/masters/$IMAGE_UUID/postinst.d"
 
 # If postinst_dir doesn't exist, leaving
