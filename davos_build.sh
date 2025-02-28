@@ -2,7 +2,7 @@
 set -e
 
 # Edit these line to update clonezilla version
-version="20241002-oracular"
+version="20250126-oracular"
 arch="amd64"
 base_url="http://free.nchc.org.tw/clonezilla-live/alternative/testing/$version/"
 
