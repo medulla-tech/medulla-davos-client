@@ -107,19 +107,20 @@ class imageRestorer(object):
             if self.manager.clonezilla_params['clonezilla_restorer_params'] is False:
                 self.manager.clonezilla_params['clonezilla_restorer_params'] = "-scr -icrc -icds -g auto -e1 auto -e2 -c -r -j2 -p true"
 
-            error_code = subprocess.call('yes 2>/dev/null| /usr/sbin/ocs-sr %s --mcast-port 2232 multicast_restoredisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_restorer.log' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
+            error_code = subprocess.call('yes 2>/dev/null| /bin/bash -c "/usr/sbin/ocs-sr %s --mcast-port 2232 multicast_restoredisk %s %s > >(exec cat | tee -a /var/log/davos_restorer.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
         else:
-            error_code = subprocess.call('yes 2>/dev/null| /usr/sbin/ocs-sr %s restoredisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_restorer.log' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
+            error_code = subprocess.call('yes 2>/dev/null | /bin/bash -c "/usr/sbin/ocs-sr %s restoredisk %s %s > >(exec cat | tee -a /var/log/davos_restorer.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
 
         # Save image JSON and LOG
         current_ts = time.strftime("%Y%m%d%H%M%S")
 
-        image_dir = os.path.join('/home/partimag/', self.image_uuid) + '/'
+        image_dir = os.path.join('/home/partimag/sysprep/debug_imaging/', hostname) + '/'
 
         if error_code != 0:
-            self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details.')
+            os.makedirs(image_dir, exist_ok=True)
             saver_log_path = os.path.join(image_dir, 'davos_restorer-%s.log' % (current_ts) )
             open(saver_log_path, 'w').write(open('/var/log/davos_restorer.log', 'r').read())
+            self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details inside postinst/sysprep/debug_imaging/ samba share.')
             time.sleep(15)
 
         # RUN POST INST STEP
