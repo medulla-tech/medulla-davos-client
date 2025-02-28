@@ -24,7 +24,7 @@ chroot . bash -c 'apt update && apt -y install apt-utils python3-minimal libpyth
 chroot . bash -c 'python3 -m pip install --break-system-packages setuptools'
 chroot . bash -c 'python3 -m pip install --break-system-packages tftpy'
 chroot . bash -c 'wget https://github.com/glpi-project/glpi-agent/releases/download/1.5/glpi-agent_1.5-1_all.deb'
-chroot . bash -c 'apt install ./glpi-agent_1.5-1_all.deb'
+chroot . bash -c 'apt install ./glpi-agent_1.5-1_all.deb -y '
 chroot . bash -c 'rm -fv glpi-agent_1.5-1_all.deb'
 chroot . bash -c 'ln -s /usr/lib/systemd/system/sshd.service /etc/systemd/system/multi-user.target.wants/sshd.service'
 chroot . bash -c 'rm -frv /opt/*'
