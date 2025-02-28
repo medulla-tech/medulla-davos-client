@@ -1,3 +1,5 @@
+
+
 # -*- coding: utf-8; -*-
 #
 # (c) 2007-2015 Mandriva, http://www.mandriva.com/
@@ -23,6 +25,7 @@ import os
 import subprocess
 import json
 import time
+import socket
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 from davos.inventory import Inventory
 from time import sleep
@@ -88,7 +91,7 @@ class imageRestorer(object):
             self.image_uuid = self.manager.kernel_params['image_uuid']
             os.environ['IMAGE_UUID'] = self.image_uuid
 
-        # Check image
+        # Check image
         self.check_image()
 
         # Set Fake Parclone mode
@@ -116,7 +119,7 @@ class imageRestorer(object):
         # Save image JSON and LOG
         current_ts = time.strftime("%Y%m%d%H%M%S")
 
-        image_dir = os.path.join('/home/partimag/sysprep/debug_imaging/', hostname) + '/'
+        image_dir = os.path.join('/opt/sysprep/debug_imaging/', socket.gethostname()) + '/'
 
         if error_code != 0:
             os.makedirs(image_dir, exist_ok=True)
