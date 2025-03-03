@@ -117,13 +117,13 @@ class imageRestorer(object):
         # Save image JSON and LOG
         current_ts = time.strftime("%Y%m%d%H%M%S")
 
-        image_dir = os.path.join('/opt/sysprep/debug_imaging/', socket.gethostname()) + '/'
+        image_dir = os.path.join('/mnt/logs/debug_imaging/', socket.gethostname()) + '/'
 
         if error_code != 0:
             os.makedirs(image_dir, exist_ok=True)
             saver_log_path = os.path.join(image_dir, 'davos_restorer-%s.log' % (current_ts) )
             open(saver_log_path, 'w').write(open('/var/log/davos_restorer.log', 'r').read())
-            self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details inside postinst/sysprep/debug_imaging/ samba share.')
+            self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details inside imaginglogs/debug_imaging/ samba share.')
             time.sleep(15)
 
         # RUN POST INST STEP

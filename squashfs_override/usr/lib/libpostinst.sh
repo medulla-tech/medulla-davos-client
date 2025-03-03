@@ -503,14 +503,16 @@ CopyDrivers (){
 }
 
 Debug (){
-    mkdir -p /opt/sysprep/debug_imaging/`hostname`
-    cp /var/log/clonezilla.log /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-clonezilla.log
-    cp /var/log/partclone.log /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-partclone.log
-    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/unattend.xml /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-unattend.xml
-    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/[[:alpha:]]etuperr.log /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-setuperr.log
-    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/[[:alpha:]]etupact.log /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-setupact.log
+    mkdir -p /mnt/logs/debug_imaging/`hostname`
+    cp /var/log/clonezilla.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-clonezilla.log
+    cp /var/log/partclone.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-partclone.log
+    cp /var/log/davos_saver.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-davos_saver.log
+    cp /var/log/davos_restorer.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-davos_restorer.log
+    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/unattend.xml /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-unattend.xml
+    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/[[:alpha:]]etuperr.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-setuperr.log
+    cp /mnt/[[:alpha:]]indows/[[:alpha:]]anther/[[:alpha:]]etupact.log /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-setupact.log
     
-    ls /mnt/Windows/Panther/ > /opt/sysprep/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-direct-panther
+    ls /mnt/Windows/Panther/ > /mnt/logs/debug_imaging/`hostname`/`date '+%Y-%m-%d-%H:%M:%S'`-direct-panther
 
 }
 
