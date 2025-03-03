@@ -1,3 +1,9 @@
+pulse2-davos-client (0.53.0-0.20250126.oracular.4)  stable; urgency=low
+
+   * Fix logs location
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
+
 pulse2-davos-client (0.53.0-0.20250126.oracular.3)  stable; urgency=low
 
    * Fix showing errors
