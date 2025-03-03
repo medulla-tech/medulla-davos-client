@@ -23,6 +23,7 @@ import os
 import subprocess
 import json
 import time
+import socket
 
 class imageSaver(object):
 
@@ -53,19 +54,22 @@ class imageSaver(object):
             self.device = 'vda'
 
         # Start the image saver
-        error_code = subprocess.call('yes 2>/dev/null|/usr/sbin/ocs-sr %s savedisk %s %s 2>&1 1>/dev/null | tee /var/log/davos_saver.log' % (self.manager.clonezilla_params['clonezilla_saver_params'], self.image_uuid, self.device), shell=True)
+        error_code = subprocess.call('yes 2>/dev/null|/bin/bash -c "/usr/sbin/ocs-sr %s savedisk %s %s > >(exec cat | tee -a /var/log/davos_saver.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_saver_params'], self.image_uuid, self.device), shell=True)
 
-        image_dir = os.path.join('/home/partimag/', self.image_uuid) + '/'
+        # Save image JSON and LOG
+        current_ts = time.strftime("%Y%m%d%H%M%S")
+
+        image_dir = os.path.join('/mnt/logs/debug_imaging/', socket.gethostname()) + '/'
 
         if error_code != 0:
-            self.logger.warning('An error was encountered while creating image, check davos_saver.log for more details.')
-            saver_log_path = os.path.join(image_dir, 'davos_saver.log')
+            os.makedirs(image_dir, exist_ok=True)
+            saver_log_path = os.path.join(image_dir, 'davos_saver-%s.log' % (current_ts) )
             open(saver_log_path, 'w').write(open('/var/log/davos_saver.log', 'r').read())
+            self.logger.warning('An error was encountered while creating image, check davos_saver.log for more details.')
             time.sleep(15)
 
         # Save image JSON and LOG
         info = {}
-        current_ts = time.strftime("%Y-%m-%d %H:%M:%S")
         info['title'] = 'Image of %s at %s' % (self.manager.hostname, current_ts)
         info['description'] = ''
         info['size'] = sum(os.path.getsize(image_dir+f) for f in os.listdir(image_dir) if os.path.isfile(image_dir+f))
