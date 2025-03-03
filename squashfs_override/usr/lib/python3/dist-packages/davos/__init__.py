@@ -253,6 +253,21 @@ class davosManager(object):
                 self.logger.error('Cannot mount %s Share', certs_dir)
                 self.logger.error('Output: %s', e)
 
+
+        # Logs share
+        logs_dir = '/mnt/logs'
+        self.nfs_share_logs = '/var/lib/pulse2/imaging/imaginglogs/'
+        if not os.path.exists(logs_dir):
+            os.mkdir(logs_dir)
+
+        if self.isEmptyDir(logs_dir):
+            self.logger.info('Mounting %s NFS Share', logs_dir)
+            o, e, ec = self.runInShell('mount %s:%s %s' % (server, self.nfs_share_logss, logs_dir))
+            if ec != 0:
+                self.logger.error('Cannot mount %s Share', logss_dir)
+                self.logger.error('Output: %s', e)
+
+
     def createPartimagSymlink(self):
         try:
             # Remove /home/partimag dir
