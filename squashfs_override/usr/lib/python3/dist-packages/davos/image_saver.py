@@ -59,11 +59,12 @@ class imageSaver(object):
         # Save image JSON and LOG
         current_ts = time.strftime("%Y%m%d%H%M%S")
 
-        image_dir = os.path.join('/mnt/logs/debug_imaging/', socket.gethostname()) + '/'
+        logs_dir = os.path.join('/mnt/logs/debug_imaging/', socket.gethostname()) + '/'
+        image_dir = os.path.join('/home/partimag/', self.image_uuid) + '/'
 
         if error_code != 0:
-            os.makedirs(image_dir, exist_ok=True)
-            saver_log_path = os.path.join(image_dir, 'davos_saver-%s.log' % (current_ts) )
+            os.makedirs(logs_dir, exist_ok=True)
+            saver_log_path = os.path.join(logs_dir, 'davos_saver-%s.log' % (current_ts) )
             open(saver_log_path, 'w').write(open('/var/log/davos_saver.log', 'r').read())
             self.logger.warning('An error was encountered while creating image, check davos_saver.log for more details.')
             time.sleep(15)
