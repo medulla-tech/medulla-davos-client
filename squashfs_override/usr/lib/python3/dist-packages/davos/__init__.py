@@ -256,7 +256,7 @@ class davosManager(object):
 
         # Logs share
         logs_dir = '/mnt/logs'
-        self.nfs_share_logs = '/var/lib/pulse2/imaging/imaginglogs/'
+        self.nfs_share_logs = '/var/lib/pulse2/imaging/logs/'
         if not os.path.exists(logs_dir):
             os.mkdir(logs_dir)
 
