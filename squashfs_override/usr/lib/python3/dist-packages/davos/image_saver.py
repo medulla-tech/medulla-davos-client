@@ -78,8 +78,18 @@ class imageSaver(object):
         log_path = os.path.join(image_dir, 'davos.log')
         json_path = os.path.join(image_dir, 'davosInfo.json')
 
-        open(log_path, 'w').write(open('/var/log/davos.log', 'r').read())
-        open(json_path, 'w').write(json.dumps(info))
+        try:
+            open(log_path, 'w').write(open('/var/log/davos_saver.log', 'r').read())
+        except FileNotFoundError:
+            self.logger.error("The file /var/log/davos_saver.log does not exist")
+        except Exception as e:
+            self.logger.error("The error %s occured" % str(e))
+
+        try:
+            open(json_path, 'w').write(json.dumps(info))
+        except Exception:
+            self.logger.error("We failed to write the informations about the master")
+
 
         # after an amount of time, xmlrpc goes on "timeout"
         # this try-except is here to "force" xmlrpc to reconnect
