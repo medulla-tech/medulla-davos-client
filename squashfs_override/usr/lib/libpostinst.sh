@@ -60,21 +60,15 @@ CopySysprep ()
 }
 
 UseOEMBiosLicence ()
-{   
-    # Retreive OEM licence from bios
+{
+    # Retrieve OEM license from bios
     OEM_KEY=$(strings /sys/firmware/acpi/tables/MSDM | tail -1)
-    Key1=$(echo $OEM_KEY |cut -d "-" -f1)
-    Key2=$(echo $OEM_KEY |cut -d "-" -f2)
-    Key3=$(echo $OEM_KEY |cut -d "-" -f3)
-    Key4=$(echo $OEM_KEY |cut -d "-" -f4)
-    Key5=$(echo $OEM_KEY |cut -d "-" -f5)  
-    sed "s/<ProductKey>.*$/<ProductKey>${OEM_KEY}<\/ProductKey>"`echo -e "\015"`"/" -i /mnt/Windows/Panther/unattend.xml
-    sed "s/ProductKey1\":\".*\",\"ProductKey2/ProductKey1\":\""$Key1"\",\"ProductKey2/" -i /mnt/Windows/Panther/unattend.xml
-    sed "s/ProductKey2\":\".*\",\"ProductKey3/ProductKey2\":\""$Key2"\",\"ProductKey3/" -i /mnt/Windows/Panther/unattend.xml
-    sed "s/ProductKey3\":\".*\",\"ProductKey4/ProductKey3\":\""$Key3"\",\"ProductKey4/" -i /mnt/Windows/Panther/unattend.xml
-    sed "s/ProductKey4\":\".*\",\"ProductKey5/ProductKey4\":\""$Key4"\",\"ProductKey5/" -i /mnt/Windows/Panther/unattend.xml
-    sed "s/ProductKey5\":\".*\",\"CopyProfile/ProductKey5\":\""$Key5"\",\"CopyProfile/" -i /mnt/Windows/Panther/unattend.xml
-    sed -e '/<ProductKey>/,/<\/ProductKey>/c\        <ProductKey>\n          <Key>'"${OEM_KEY}"'</Key>\n        </ProductKey>' -i /mnt/Windows/Panther/unattend.xml
+    export OEM_KEY
+    # Update <ProductKey>*</ProductKey>
+    sed -E -i "s|<ProductKey>[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}</ProductKey>|<ProductKey>$OEM_KEY</ProductKey>|g" /mnt/Windows/Panther/unattend.xml
+    # Update <ProductKey><Key>*</Key></ProductKey>
+    perl -0777 -i -pe "s|<ProductKey>[[:space:]]*<Key>[^<]*</Key>[[:space:]]*</ProductKey>|<ProductKey><Key>$OEM_KEY</Key></ProductKey>|g" /mnt/Windows/Panther/unattend.xml
+    # Convert into dos format
     unix2dos /mnt/Windows/Panther/unattend.xml 2>1 > /dev/null
 }
 
