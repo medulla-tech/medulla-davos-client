@@ -74,7 +74,7 @@ UseOEMBiosLicence ()
     sed "s/ProductKey3\":\".*\",\"ProductKey4/ProductKey3\":\""$Key3"\",\"ProductKey4/" -i /mnt/Windows/Panther/unattend.xml
     sed "s/ProductKey4\":\".*\",\"ProductKey5/ProductKey4\":\""$Key4"\",\"ProductKey5/" -i /mnt/Windows/Panther/unattend.xml
     sed "s/ProductKey5\":\".*\",\"CopyProfile/ProductKey5\":\""$Key5"\",\"CopyProfile/" -i /mnt/Windows/Panther/unattend.xml
-
+    sed -e '/<ProductKey>/,/<\/ProductKey>/c\        <ProductKey>\n          <Key>'"${OEM_KEY}"'</Key>\n        </ProductKey>' -i /mnt/Windows/Panther/unattend.xml
     unix2dos /mnt/Windows/Panther/unattend.xml 2>1 > /dev/null
 }
 
