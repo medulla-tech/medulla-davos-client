@@ -188,7 +188,7 @@ class imageRestorer(object):
         if "postinstall" in self.manager.kernel_params:
             postinst = self.manager.rpc.imaging_api.getPostInstall(self.manager.kernel_params["postinstall"])
         elif "profile" in self.manager.kernel_params:
-            postinst = self.manager.rpc.imaging_api.getPostInstallsFromProfile(self.manager.kernel_paramms['profile'])
+            postinst = self.manager.rpc.imaging_api.getPostInstallsFromProfile(self.manager.kernel_params['profile'])
         else:
             postinst = self.manager.rpc.imaging_api.getPostInstalls(image_uuid, target_uuid)
         self.write_postinstalls(image_uuid, postinst)
