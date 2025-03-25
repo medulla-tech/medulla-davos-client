@@ -8,8 +8,6 @@ Medulla Davos client relies on open source technologies like python, c, hdt, clo
 
 Installation had been simplified to easily try and use, just [download](https://medulla-tech.io/dl/)
 
-For large and complexe installation, follow this [links](https://github.com/medulla-tech/integration//blob/main/README.md)
-
 ## Community
 
 * Discuss on Discord Channel: https://discord.gg/Mj8wGGp4yH
