@@ -28,6 +28,8 @@ import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error,
 from davos.inventory import Inventory
 from time import sleep
 from .dialog import Dialog
+import shutil
+import stat
 
 class imageRestorer(object):
 
@@ -138,9 +140,60 @@ class imageRestorer(object):
         os.environ['HOSTNAME'] = self.manager.hostname
         os.environ['IPSERVER'] = self.manager.server
 
+    def write_postinstalls(self, master_uuid, postinstalls):
+        # créé le dossier s'il n'existe pas
+        postinstdir = os.path.join("/","imaging_server", "masters", master_uuid, "postinst.d")
+        POSTINST = "%02d_postinst"
+        if os.path.exists(postinstdir):
+            self.logger.debug("Deleting previous post-imaging directory: %s" % postinstdir)
+            try:
+                shutil.rmtree(postinstdir)
+            except OSError as e:
+                self.logger.error("Can't delete post-imaging directory %s: %s" % (postinstdir, e))
+                raise
+        # Then populate the post-imaging script directory if needed
+        if postinstalls:
+            try:
+                os.mkdir(postinstdir)
+                self.logger.debug("Directory successfully created: %s" % postinstdir)
+            except OSError as e:
+                self.logger.error("Can't create post-imaging script folder %s: %s" % (postinstdir, e))
+                raise
+            order = 1  # keep 0 for later use
+            for script in postinstalls:
+                postinst = os.path.join(postinstdir, POSTINST % order)
+                try:
+                    # write header
+                    with open(postinst, "w+") as fb:
+                        fb.write("#!/bin/bash\n")
+                        fb.write("\n")
+                        fb.write(". /usr/lib/libpostinst.sh")
+                        fb.write("\n")
+                        fb.write('echo "==> postinstall script #%d : %s"\n'% (order, script["name"]))
+                        fb.write("set -v\n")
+                        fb.write("\n")
+                        fb.write(script["value"])
+                        fb.close()
+                    os.chmod(postinst, stat.S_IRUSR | stat.S_IXUSR)
+                    self.logger.debug("Successfully wrote script: %s" % postinst)
+                except Exception as e:
+                    self.logger.error("Something wrong happened while writing post-imaging script %s: %s"% (postinst, e))
+                order += 1
+        else:
+            self.logger.debug("No post-imaging script to write")
+
     def run_postimaging(self):
+        image_uuid = self.manager.kernel_params["image_uuid"]
+        target_uuid = self.manager.host_data['uuid']
+        if "postinstall" in self.manager.kernel_params:
+            postinst = self.manager.rpc.imaging_api.getPostInstall(self.manager.kernel_params["postinstall"])
+        elif "profile" in self.manager.kernel_params:
+            postinst = self.manager.rpc.imaging_api.getPostInstallsFromProfile(self.manager.kernel_params['profile'])
+        else:
+            postinst = self.manager.rpc.imaging_api.getPostInstalls(image_uuid, target_uuid)
+        self.write_postinstalls(image_uuid, postinst)
         self.setlibpostinstVars()
-        subprocess.call('davos_postimaging')
+        subprocess.call(['davos_postimaging', image_uuid])
 
     def apply_convergence(self):
 
