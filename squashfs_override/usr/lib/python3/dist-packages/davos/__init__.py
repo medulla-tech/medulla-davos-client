@@ -175,13 +175,25 @@ class davosManager(object):
     def isEmptyDir(self, path):
         return os.listdir(path) == []
 
+    def getMachineUuid(self):
+        path_to_uuid = os.path.join("/", "sys", "class", "dmi", "id", "product_uuid")
+        uuid = ""
+        with open(path_to_uuid, "r") as fb:
+            uuid = fb.readline()
+            fb.close()
+        uuid = uuid.replace("\n", "")
+        return uuid
 
     def getHostInfo(self):
         self.logger.info('Asking for hostinfo')
 
-        self.host_data = self.rpc.imaging_api.getComputerByMac(self.mac)
+        self.host_uuid = self.getMachineUuid()
+        self.logger.info('Got UUID: %s', self.host_uuid)
 
-        self.hostname = self.host_data['shortname']
+        self.host_data = self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
+        # self.host_data = self.rpc.imaging_api.getComputerByMac(self.mac)
+
+        self.hostname = self.host_data['shortname'] if 'shortname' in self.host_data else self.host_data['name']
         # Setting env and machine hostname (for inventory)
         os.environ['HOSTNAME'] = self.hostname
         self.runInShell('hostname ' + self.hostname)
@@ -189,10 +201,9 @@ class davosManager(object):
 
         self.logger.info('Got hostname: %s', self.hostname)
 
-        self.host_uuid = self.host_data['uuid']
-        self.logger.info('Got UUID: %s', self.host_uuid)
+        # self.host_uuid = self.host_data['uuid']
 
-        self.host_entity = self.host_data['entity']
+        self.host_entity = self.host_data['entities_id']
         self.logger.info('Got entity: %s', self.host_entity)
 
 

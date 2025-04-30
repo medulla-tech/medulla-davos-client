@@ -66,6 +66,9 @@ class Inventory(object):
         tftpclient = tftpy.TftpClient(manager.tftp_ip, 69)
         tftpclient.upload('/' + manager.dump_path + '/' + self.macaddress + '.xml', '/tmp/' + self.macaddress + '.xml')
 
+        # Add a tempo to give time to register-pxe and package-server to do their jobs
+        self.logger.info("Rebooting please wait...")
+        time.sleep(3)
 
     @property
     def OS(self):
