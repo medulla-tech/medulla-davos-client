@@ -187,10 +187,17 @@ class davosManager(object):
     def getHostInfo(self):
         self.logger.info('Asking for hostinfo')
 
-        self.host_uuid = self.getMachineUuid()
-        self.logger.info('Got UUID: %s', self.host_uuid)
+        self.uuid = self.getMachineUuid()
+        self.logger.info('Got UUID: %s', self.uuid)
+        host_data = self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
 
-        self.host_data = self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
+        self.host_data = {
+            "entity" : host_data['entities_id'],
+            "uuid" : "UUID%s"%host_data['id'],
+            "fqdn" : host_data['name'],
+            "shortname" : host_data['name'],
+        }
+        # self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
         # self.host_data = self.rpc.imaging_api.getComputerByMac(self.mac)
 
         self.hostname = self.host_data['shortname'] if 'shortname' in self.host_data else self.host_data['name']
