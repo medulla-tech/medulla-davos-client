@@ -188,8 +188,8 @@ class davosManager(object):
         self.logger.info('Asking for hostinfo')
 
         self.uuid = self.getMachineUuid()
-        self.logger.info('Got UUID: %s', self.uuid)
-        host_data = self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
+        self.logger.info('Got machine UUID: %s', self.uuid)
+        host_data = self.rpc.imaging_api.getMachineByUuidSetup(self.uuid)
 
         self.host_data = {
             "entity" : host_data['entities_id'],
@@ -197,8 +197,6 @@ class davosManager(object):
             "fqdn" : host_data['name'],
             "shortname" : host_data['name'],
         }
-        # self.rpc.imaging_api.getMachineByUuidSetup(self.host_uuid)
-        # self.host_data = self.rpc.imaging_api.getComputerByMac(self.mac)
 
         self.hostname = self.host_data['shortname'] if 'shortname' in self.host_data else self.host_data['name']
         # Setting env and machine hostname (for inventory)
@@ -208,9 +206,9 @@ class davosManager(object):
 
         self.logger.info('Got hostname: %s', self.hostname)
 
-        # self.host_uuid = self.host_data['uuid']
+        self.host_uuid = self.host_data['uuid']
 
-        self.host_entity = self.host_data['entities_id']
+        self.host_entity = self.host_data['entity']
         self.logger.info('Got entity: %s', self.host_entity)
 
 
