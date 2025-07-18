@@ -74,7 +74,7 @@ class imageSaver(object):
         info['title'] = 'Image of %s at %s' % (self.manager.hostname, current_ts)
         info['description'] = ''
         info['size'] = sum(os.path.getsize(image_dir+f) for f in os.listdir(image_dir) if os.path.isfile(image_dir+f))
-        info['has_error'] = (error_code == 0)
+        info['has_error'] = (error_code != 0)
 
         log_path = os.path.join(image_dir, 'davos.log')
         json_path = os.path.join(image_dir, 'davosInfo.json')
