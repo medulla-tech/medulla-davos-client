@@ -2,9 +2,9 @@
 set -e
 
 # Edit these line to update clonezilla version
-version="20250404-oracular"
+version="20250620-plucky"
 arch="amd64"
-base_url="http://free.nchc.org.tw/clonezilla-live/alternative/testing/$version/"
+base_url="http://free.nchc.org.tw/clonezilla-live/alternative/stable/"
 
 # =============================================================
 # Don't edit anything below these lines 
