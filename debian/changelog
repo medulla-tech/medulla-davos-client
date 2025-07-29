@@ -6,513 +6,513 @@ medulla-davos-client (0.54.0-0.20250620-plucky.1)  stable; urgency=low
 
  -- Medulla Support <support@medulla-tech.io> Tue, 29 Jul 2025 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.7)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.7)  stable; urgency=low
 
    * Fix UseOEMBiosLicence by adding missing Productkey tag
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 05 apr 2025 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.6)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.6)  stable; urgency=low
 
    * Fix ro on window partition
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.5)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.5)  stable; urgency=low
 
    * Fix save
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.4)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.4)  stable; urgency=low
 
    * Fix logs location
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.3)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.3)  stable; urgency=low
 
    * Fix showing errors
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.2)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.2)  stable; urgency=low
 
    * find the postinstall from the database and write them
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
 
-pulse2-davos-client (0.53.0-0.20250126.oracular.1)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20250126.oracular.1)  stable; urgency=low
 
    * New oracular snapshot
    * find the postinstall from the database and write them
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.8)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.8)  stable; urgency=low
 
    * Fix xmlrpc timeout issue
    * Adapt for python3 ( string.split() )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.6)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.6)  stable; urgency=low
 
    * Fix yet an other typo
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.5)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.5)  stable; urgency=low
 
    * Set the hosts file earlier
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.3)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.3)  stable; urgency=low
 
    * Fix ssl error when saving an image
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.2)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.2)  stable; urgency=low
 
    * Manually install setuptools (not available in ubuntu anymore)
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20241002.oracular.1)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20241002.oracular.1)  stable; urgency=low
 
    * New Oracular version
    * Fix some certificate issues
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20240715.oracular.4)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20240715.oracular.4)  stable; urgency=low
 
    * Fix some certificate issues
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20240715.oracular.3)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20240715.oracular.3)  stable; urgency=low
 
    * Install medulla certificate on davos live.
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20240715.oracular.2)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20240715.oracular.2)  stable; urgency=low
 
    * Remove ash from installed packages. Does not exist anymore
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.53.0-0.20240715.oracular.1)  stable; urgency=low
+medulla-davos-client (0.53.0-0.20240715.oracular.1)  stable; urgency=low
 
    * New Oracular snapshot
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.52.0-0.20231004.mantic.1)  stable; urgency=low
+medulla-davos-client (0.52.0-0.20231004.mantic.1)  stable; urgency=low
 
    * New mantic snapshot
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.51.0-0.20220118.jammy.3)  stable; urgency=low
+medulla-davos-client (0.51.0-0.20220118.jammy.3)  stable; urgency=low
 
    * Rebranding to Medulla
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 14 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.51.0-0.20220118.jammy.2)  stable; urgency=low
+medulla-davos-client (0.51.0-0.20220118.jammy.2)  stable; urgency=low
 
    * Add support for vda partition 
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 07 apr 2023 00:59:02 +0100
 
-pulse2-davos-client (0.51.0-0.20220118.jammy.1)  stable; urgency=low
+medulla-davos-client (0.51.0-0.20220118.jammy.1)  stable; urgency=low
 
    * New jammy snapshot
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.50.0-0.20210525.groovy.2)  stable; urgency=low
+medulla-davos-client (0.50.0-0.20210525.groovy.2)  stable; urgency=low
 
    * New groovy snapshot
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.50.0-0.20210525.groovy.1)  stable; urgency=low
+medulla-davos-client (0.50.0-0.20210525.groovy.1)  stable; urgency=low
 
    * New groovy snapshot
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.50.0-0.20210107.groovy.3)  stable; urgency=low
+medulla-davos-client (0.50.0-0.20210107.groovy.3)  stable; urgency=low
 
    * Fix davos python2 shebang
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
  
-pulse2-davos-client (0.50.0-0.20210107.groovy.2)  stable; urgency=low
+medulla-davos-client (0.50.0-0.20210107.groovy.2)  stable; urgency=low
 
    * Fix linux-firmware install
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
  
-pulse2-davos-client (0.50.0-0.20210107.groovy.1)  stable; urgency=low
+medulla-davos-client (0.50.0-0.20210107.groovy.1)  stable; urgency=low
 
    * Simple test with groovy, with old partclone
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.31)  stable; urgency=low
+medulla-davos-client (0.49.31)  stable; urgency=low
 
    * Test automatic build on the BuildSystem
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.30)  stable; urgency=low
+medulla-davos-client (0.49.30)  stable; urgency=low
 
    * exclude more categories from minimal inventory for PXE registration
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.29)  stable; urgency=low
+medulla-davos-client (0.49.29)  stable; urgency=low
 
    * Fix davos backtrace 
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.28)  stable; urgency=low
+medulla-davos-client (0.49.28)  stable; urgency=low
 
    * Revert the log level
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.27)  stable; urgency=low
+medulla-davos-client (0.49.27)  stable; urgency=low
 
    * Fix OS name for newer versions of Fusion and GLPI
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Fri, 21 Sep 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.25)  stable; urgency=low
+medulla-davos-client (0.49.25)  stable; urgency=low
 
    * Empty /opt/
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.24)  stable; urgency=low
+medulla-davos-client (0.49.24)  stable; urgency=low
 
    * Revert drdl too
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.23)  stable; urgency=low
+medulla-davos-client (0.49.23)  stable; urgency=low
 
    * Use LTS debian ( bionic 20180812 ) amd64 stable + our packages
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.22)  stable; urgency=low
+medulla-davos-client (0.49.22)  stable; urgency=low
 
    * Use LTS debian ( trusty 20160627 ) amd64 stable
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.21)  stable; urgency=low
+medulla-davos-client (0.49.21)  stable; urgency=low
 
    * Use LTS debian ( xenial 20160627 ) i386 stable
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.20)  stable; urgency=low
+medulla-davos-client (0.49.20)  stable; urgency=low
 
    * Use LTS debian ( xenial 20160627 ) amd64 stable
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.14)  stable; urgency=low
+medulla-davos-client (0.49.14)  stable; urgency=low
 
    * Use LTS debian ( bionic 20180812 ) i386 stable 
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 16 Aug 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.13)  unstable; urgency=low
+medulla-davos-client (0.49.13)  unstable; urgency=low
 
    * Use LTS debian ( bionic 20180725 ) with modprobe efivars
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 25 Jul 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.12)  unstable; urgency=low
+medulla-davos-client (0.49.12)  unstable; urgency=low
 
    * Use LTS debian ( bionic 20180725 ) add efivar Tools to manage UEFI variables 
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 25 Jul 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.11)  unstable; urgency=low
+medulla-davos-client (0.49.11)  unstable; urgency=low
 
    * Use LTS debian ( bionic 20180725 ) 
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 25 Jul 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.10)  unstable; urgency=low
+medulla-davos-client (0.49.10)  unstable; urgency=low
 
    * Use LTS debian ( bionic )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.9)  unstable; urgency=low
+medulla-davos-client (0.49.9)  unstable; urgency=low
 
    * Use LTS debian ( xenial )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.8)  unstable; urgency=low
+medulla-davos-client (0.49.8)  unstable; urgency=low
 
    * Use LTS debian ( bionic )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.7)  unstable; urgency=low
+medulla-davos-client (0.49.7)  unstable; urgency=low
 
    * Use LTS debian ( xenial )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.6)  unstable; urgency=low
+medulla-davos-client (0.49.6)  unstable; urgency=low
 
    * Use LTS debian ( bionic )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
 
-pulse2-davos-client (0.49.5)  unstable; urgency=low
+medulla-davos-client (0.49.5)  unstable; urgency=low
 
    * Use LTS debian ( xenial )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.4)  unstable; urgency=low
+medulla-davos-client (0.49.4)  unstable; urgency=low
 
    * Update to use Ubuntu Bionic
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
 
-pulse2-davos-client (0.49.3)  unstable; urgency=low
+medulla-davos-client (0.49.3)  unstable; urgency=low
 
    * Exclude more categories from minimal inventory for PXE registration
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.2)  unstable; urgency=low
+medulla-davos-client (0.49.2)  unstable; urgency=low
 
    * Set OSNAME as Unknown operating system (PXE network boot inventory)
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 04 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49.1)  unstable; urgency=low
+medulla-davos-client (0.49.1)  unstable; urgency=low
 
    * Fix registration of machines using davos
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Tue, 03 Apr 2018 00:59:02 +0100
 
-pulse2-davos-client (0.49)  unstable; urgency=low
+medulla-davos-client (0.49)  unstable; urgency=low
   
    * Switch back to Xenial ( LTS )
    * Allow registration of machines using davos
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Tue, 20 Feb 2018 00:59:02 +0100
 
-pulse2-davos-client (0.48.3)  unstable; urgency=low
+medulla-davos-client (0.48.3)  unstable; urgency=low
   
    * Enable ssh by default
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Tue, 20 Feb 2018 00:59:02 +0100
 
-pulse2-davos-client (0.48)  unstable; urgency=low
+medulla-davos-client (0.48)  unstable; urgency=low
   
    * Update to 20180119-artful
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 07 Feb 2018 00:59:02 +0100
 
-pulse2-davos-client (0.47)  unstable; urgency=low
+medulla-davos-client (0.47)  unstable; urgency=low
 
    * Update to 20170919-zesty
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 18 Jan 2017 00:59:02 +0100
 
-pulse2-davos-client (0.46)  unstable; urgency=low
+medulla-davos-client (0.46)  unstable; urgency=low
 
    * Revert IP in conf
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 18 Jan 2017 00:59:02 +0100
 
-pulse2-davos-client (0.45)  unstable; urgency=low
+medulla-davos-client (0.45)  unstable; urgency=low
 
    * Update to 20170829-zesty
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 18 Jan 2017 00:59:02 +0100
 
-pulse2-davos-client (0.44)  unstable; urgency=low
+medulla-davos-client (0.44)  unstable; urgency=low
 
    * Redirect only stderr to file ( 2e418c231239f77751638febb6fc9c07a780daa0 )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 18 Jan 2017 00:59:02 +0100
 
-pulse2-davos-client (0.43)  unstable; urgency=low
+medulla-davos-client (0.43)  unstable; urgency=low
 
   * Save log files in case of errors during restore ( ca170c27a7403fb1ba767abefdd290d9ff4dd7aa )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Wed, 18 Jan 2017 00:59:02 +0100
 
-pulse2-davos-client (0.42)  unstable; urgency=low
+medulla-davos-client (0.42)  unstable; urgency=low
 
   * Save log file in case of errors ( 69d15ca1428badb851604e61a96e20b05c458549 )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.41)  unstable; urgency=low
+medulla-davos-client (0.41)  unstable; urgency=low
 
   * Fix MULTICAST_ALL_ADDR value
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.40)  unstable; urgency=low
+medulla-davos-client (0.40)  unstable; urgency=low
 
   * Rebuild to fix missing python
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.34)  unstable; urgency=low
+medulla-davos-client (0.34)  unstable; urgency=low
 
   * Update clonezilla
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.31)  unstable; urgency=low
+medulla-davos-client (0.31)  unstable; urgency=low
 
   * Regenerate squashfs
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.30)  unstable; urgency=low
+medulla-davos-client (0.30)  unstable; urgency=low
 
   * Make use of Clonezilla options set in Pulse + Fix for NFS parameters ( e4f57bcfede36f50d7902263f4160f55236fc23c )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.29)  unstable; urgency=low
+medulla-davos-client (0.29)  unstable; urgency=low
 
   *  Make use of davos options for nfs shares to be mounted ( 0afb978937a6676819221bfde70747be226ee4bc )
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.27)  unstable; urgency=low
+medulla-davos-client (0.27)  unstable; urgency=low
 
   * Create missing folder
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
-pulse2-davos-client (0.26)  unstable; urgency=low
+medulla-davos-client (0.26)  unstable; urgency=low
 
   * Use new PXELinux
 
  -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.25)  unstable; urgency=low
+medulla-davos-client (0.25)  unstable; urgency=low
 
   * Fix depends
 
  -- root <root@davos32> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.24)  unstable; urgency=low
+medulla-davos-client (0.24)  unstable; urgency=low
 
   * New version
 
  -- root <root@davos32> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.23)  unstable; urgency=low
+medulla-davos-client (0.23)  unstable; urgency=low
 
   * Fix detection of partitions
 
  -- root <root@davos32> Mon, 29 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.22)  unstable; urgency=low
+medulla-davos-client (0.22)  unstable; urgency=low
 
   * Fix postinst script
 
  -- root <root@davos32> Wed, 11 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.21)  unstable; urgency=low
+medulla-davos-client (0.21)  unstable; urgency=low
 
   * Fix error when using chown
 
  -- root <root@davos32> Wed, 11 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.20)  unstable; urgency=low
+medulla-davos-client (0.20)  unstable; urgency=low
 
   * Fix error when adding user
 
  -- root <root@davos32> Wed, 11 Feb 2016 00:59:02 +0100
 
 
-pulse2-davos-client (0.19)  unstable; urgency=low
+medulla-davos-client (0.19)  unstable; urgency=low
 
   * Remove set -e from postinst
 
  -- root <root@davos32> Wed, 10 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.18)  unstable; urgency=low
+medulla-davos-client (0.18)  unstable; urgency=low
 
   * Cleanup of old revo and various other useless files
 
  -- root <root@davos32> Wed, 10 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.17)  unstable; urgency=low
+medulla-davos-client (0.17)  unstable; urgency=low
 
   * Only create user when needed
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.16)  unstable; urgency=low
+medulla-davos-client (0.16)  unstable; urgency=low
 
   * Really apply spo changes
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.15)  unstable; urgency=low
+medulla-davos-client (0.15)  unstable; urgency=low
 
   * Insert hostname in /etc/hosts file to speedup loading of davos
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.14)  unstable; urgency=low
+medulla-davos-client (0.14)  unstable; urgency=low
 
   * Fix folder permissions in postinst
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.13)  unstable; urgency=low
+medulla-davos-client (0.13)  unstable; urgency=low
 
   * Fix folder permissions in postinst
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.12)  unstable; urgency=low
+medulla-davos-client (0.12)  unstable; urgency=low
 
   * Create sysprep/drivers folder
   * Create drivers user
 
  -- root <root@davos32> Mon, 8 Feb 2016 00:59:02 +0100
 
-pulse2-davos-client (0.11) unstable; urgency=medium
+medulla-davos-client (0.11) unstable; urgency=medium
 
   * Fix squashfs
 
  -- root <root@davos32>  Sat, 23 Jan 2016 00:59:02 +0100
 
-pulse2-davos-client (0.10) unstable; urgency=low
+medulla-davos-client (0.10) unstable; urgency=low
 
   * Add several fixes
 
