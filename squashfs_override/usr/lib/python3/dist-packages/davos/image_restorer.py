@@ -112,6 +112,9 @@ class imageRestorer(object):
 
             error_code = subprocess.call('yes 2>/dev/null| /bin/bash -c "/usr/sbin/ocs-sr %s --mcast-port 2232 multicast_restoredisk %s %s > >(exec cat | tee -a /var/log/davos_restorer.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
         else:
+            if self.manager.clonezilla_params['clonezilla_restorer_params'] is False:
+                self.manager.clonezilla_params['clonezilla_restorer_params'] = "-icrc -icds -nogui -g auto -e1 auto -e2 -c -r -j2 -p true"
+
             error_code = subprocess.call('yes 2>/dev/null | /bin/bash -c "/usr/sbin/ocs-sr %s restoredisk %s %s > >(exec cat | tee -a /var/log/davos_restorer.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_restorer_params'], self.image_uuid, self.device), shell=True)
 
         # Save image JSON and LOG
