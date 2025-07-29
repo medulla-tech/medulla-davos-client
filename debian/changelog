@@ -1,3 +1,11 @@
+medulla-davos-client (0.54.0-0.20250620-plucky.1)  stable; urgency=low
+
+   * Use UUID instead of MAC address for assocating machines 
+   * Update Clonezilla to 20250620-plucky
+   * Fix return codes after save and restore
+
+ -- Medulla Support <support@medulla-tech.io> Tue, 29 Jul 2025 00:59:02 +0100
+
 pulse2-davos-client (0.53.0-0.20250126.oracular.7)  stable; urgency=low
 
    * Fix UseOEMBiosLicence by adding missing Productkey tag
