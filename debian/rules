@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-DESTDIR = $(CURDIR)/debian/pulse2-davos-client
+DESTDIR = $(CURDIR)/debian/medulla-davos-client
 
 build:
 
