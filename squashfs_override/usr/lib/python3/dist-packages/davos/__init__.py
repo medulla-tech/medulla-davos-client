@@ -26,6 +26,11 @@ from davos.xmlrpc_client import pkgServerProxy
 import re
 import shutil
 import subprocess
+from davos.xmppagent import MUCBot
+from davos.utils import *
+import json
+import re
+import base64
 
 class davosManager(object):
 
@@ -104,6 +109,46 @@ class davosManager(object):
         # Init XMLRPC Client
         self.rpc = pkgServerProxy(self.server, self.fqdn)
 
+        if self.action == "XMPP":
+
+            self.uuid = self.getMachineUuid()
+
+            # configuration for xmpp
+            # TODO : Receive it from kernel opts
+            self.xmpp_server = self.server
+            self.xmpp_port = 5222
+            self.xmpp_domain = "pulse"
+            self.xmpp_jid = "%s@%s/%s"%(self.uuid, self.xmpp_domain, self.mac)
+            self.xmpp_passwd = "davos%s"%self.uuid
+
+            # self.init_xmpp()
+            self.init_xmpp()
+        else:
+            self.init_legacy()
+
+    def init_xmpp(self):
+        # Conf will come from davos params
+
+        # Create xmpp client instance
+        xmpp = MUCBot(self.xmpp_jid, self.xmpp_passwd, self.server, self.xmpp_port)
+
+        # Connect
+        try:
+            xmpp.connect((self.xmpp_server, self.xmpp_port))
+        except Exception as e:
+            self.logger.error(f"Connection Error : {e}")
+            xmpp.disconnect()
+
+        try:
+            xmpp.loop.run_forever()
+        except Exception as e:
+
+            self.logger.error(f"Agent can't run {e}")
+        finally:
+            xmpp.loop.close()
+
+
+    def init_legacy(self):
         if self.action == 'REGISTER':
             # Define hostname
             self.setHostname()
@@ -133,12 +178,12 @@ class davosManager(object):
             hdlr2.setFormatter(ColoredFormatter("%(levelname)-18s %(message)s"))
             hdlr2.setLevel(level)
             self.logger.addHandler(hdlr2)
-        
+
         self.logger.setLevel(level)
 
-    
+
     def getKernelParams(self):
-        
+
         self.logger.debug('Reading kernel params')
 
         self.kernel_params = {}
@@ -151,7 +196,7 @@ class davosManager(object):
                 else:
                     key, value = item, None
                 self.kernel_params[key] = value
-        
+
         self.logger.debug('Got kernel params %s', str(self.kernel_params))
 
 
@@ -168,7 +213,7 @@ class davosManager(object):
 
         self.logger.debug('Error code: %d', process.returncode)
         self.logger.debug('Output: %s', out)
-        
+
         return out.strip(), err.strip(), process.returncode
 
 
@@ -290,7 +335,7 @@ class davosManager(object):
             if self.isEmptyDir('/home/partimag'):
                 self.logger.debug('Removing dir: %s', '/home/partimag')
                 os.rmdir('/home/partimag')
-   
+
                 # Create a symlink to /masters remote directory
                 self.logger.debug('Creating symlink to: %s', '/imaging_server/masters')
                 os.symlink('/imaging_server/masters', '/home/partimag')
