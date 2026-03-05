@@ -50,10 +50,11 @@ class davosManager(object):
         self.action = self.kernel_params['davos_action']
 
         # Get mac address if set. If not, it is a new machine
-        try:
+        self.mac = ""
+        if "mac" in self.kernel_params:
             self.mac = self.kernel_params['mac']
-        except KeyError:
-            pass
+        elif "davos_mac" in self.kernel_params:
+            self.mac = self.kernel_params["davos_mac"]
 
         # Get nfs parameters if set. If not, use default values
         try:
@@ -110,14 +111,38 @@ class davosManager(object):
         self.rpc = pkgServerProxy(self.server, self.fqdn)
 
         if self.action == "XMPP":
+            self.uuid = ""
+            if "davos_uuid" in self.kernel_params:
+                self.uuid = self.kernel_params["davos_uuid"]
+            else:
+                self.uuid = self.getMachineUuid()
 
-            self.uuid = self.getMachineUuid()
+            self.sub_action = ""
+            if "davos_sub_action" in self.kernel_params:
+                self.sub_action = self.kernel_params['davos_sub_action']
+
+            self.action_id = 0
+            if "davos_action_id" in self.kernel_params:
+                self.action_id = self.kernel_params["davos_action_id"]
+
+            self.relay_jid=""
+            if "davos_xmpp_jid" in self.kernel_params:
+                self.relay_jid = self.kernel_params["davos_xmpp_jid"]
+
+            self.xmpp_domain = ""
+            if "davos_xmpp_domain" in self.kernel_params:
+                self.xmpp_domain = self.kernel_params["davos_xmpp_domain"]
+            elif self.relay_jid != "":
+                self.xmpp_domain = self.relay_jid.split("/")[0].split("@")[1]
+            else:
+                self.xmpp_domain = "pulse"
+
+            self.xmpp_port = 5222
+
 
             # configuration for xmpp
             # TODO : Receive it from kernel opts
             self.xmpp_server = self.server
-            self.xmpp_port = 5222
-            self.xmpp_domain = "pulse"
             self.xmpp_jid = "%s@%s/%s"%(self.uuid, self.xmpp_domain, self.mac)
             self.xmpp_passwd = "davos%s"%self.uuid
 
@@ -128,9 +153,18 @@ class davosManager(object):
 
     def init_xmpp(self):
         # Conf will come from davos params
+        from davos.image_restorer import imageRestorer
+        from davos.image_saver import imageSaver
 
         # Create xmpp client instance
-        xmpp = MUCBot(self.xmpp_jid, self.xmpp_passwd, self.server, self.xmpp_port)
+        xmpp = MUCBot(self, self.xmpp_jid, self.xmpp_passwd, self.relay_jid, self.server, self.xmpp_port)
+        xmpp.toagent = self.relay_jid
+        xmpp.uuid=self.uuid
+        xmpp.mac=self.mac
+        xmpp.xmpp_server=self.xmpp_server
+        xmpp.action_id = self.action_id
+        xmpp.domain = self.xmpp_domain
+        xmpp.substitute_jid = "master_dma@%s"%self.xmpp_domain
 
         # Connect
         try:
@@ -164,18 +198,18 @@ class davosManager(object):
 
     def initLogger(self):
         self.logger = logging.getLogger('davos')
-        self.log_level = level = logging.INFO #logging.DEBUG
+        self.log_level = level = logging.DEBUG #logging.DEBUG
 
         # Init logger
 
         fhd = logging.FileHandler('/var/log/davos.log')
-        fhd.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        fhd.setLevel(level)
+        # fhd.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        # fhd.setLevel(level)
         self.logger.addHandler(fhd)
 
         if self.debug_mode:
             hdlr2 = logging.StreamHandler()
-            hdlr2.setFormatter(ColoredFormatter("%(levelname)-18s %(message)s"))
+            hdlr2.setFormatter(ColoredFormatter("%(asctime)s - %(levelname)-18s %(message)s"))
             hdlr2.setLevel(level)
             self.logger.addHandler(hdlr2)
 

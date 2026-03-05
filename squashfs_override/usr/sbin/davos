@@ -66,29 +66,34 @@ if __name__ == '__main__':
     #imageRestorer(mgr).apply_convergence() 
     #sys.exit(0)
 
-    if action == 'SAVE_IMAGE':    
-        d = imageSaver(mgr)
-        d.start()
-    elif action == 'RESTORE_IMAGE':
-        d = imageRestorer(mgr,'unicast')
-        if args.select and not d.select_image():
-            sys.exit(1)
-        d.start()
-    elif action == 'RESTORE_IMAGE_MULTICAST':
-        d = imageRestorer(mgr,'multicast')
-        if args.select and not d.select_image():
-            sys.exit(1)
-        d.start()
-    elif action == 'RUN_BOOTSERVICE':
-    	d = bootserviceLauncher(mgr)
-    	d.start()
-    elif action == 'REGISTER':
-        d = Inventory(mgr)
-        # Wait for machine registration
-        time.sleep(int(mgr.timereboot))
-    else:
-        print('Unknown action, leaving')
-        #mgr.runInShell('reboot')
+    # On XMPP Action, launch davos with wmpp.
+    # XMPP is launched in loop_run_forever mode.
+    # On regular Action (SAVE_IMAGE, RESTORE_IMAGE, REGISTER ...)
+    # Launch the action as usual.
+    if action != "XMPP":
+        if action == 'SAVE_IMAGE':
+            d = imageSaver(mgr)
+            d.start()
+        elif action == 'RESTORE_IMAGE':
+            d = imageRestorer(mgr,'unicast')
+            if args.select and not d.select_image():
+                sys.exit(1)
+            d.start()
+        elif action == 'RESTORE_IMAGE_MULTICAST':
+            d = imageRestorer(mgr,'multicast')
+            if args.select and not d.select_image():
+                sys.exit(1)
+            d.start()
+        elif action == 'RUN_BOOTSERVICE':
+            d = bootserviceLauncher(mgr)
+            d.start()
+        elif action == 'REGISTER':
+            d = Inventory(mgr)
+            # Wait for machine registration
+            time.sleep(int(mgr.timereboot))
+        else:
+            print('Unknown action, leaving')
+            #mgr.runInShell('reboot')
 
-    # Reboot at the end
-    mgr.runInShell('reboot')
+        # Reboot at the end
+        mgr.runInShell('reboot')
