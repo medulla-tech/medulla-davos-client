@@ -39,4 +39,3 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
     datasend = json.dumps(datasend)
     objectxmpp.send_message(objectxmpp.relay_jid, datasend)
-

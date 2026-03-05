@@ -1,8 +1,8 @@
 import os
-import zlib
-import base64
 import shutil
 import logging
+from davos.utils import *
+
 logger = logging.getLogger("davos")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,6 @@ def action(objectxmpp, action, sessionid, data, message):
     logger.debug("# from : %s"%message["from"])
     logger.debug("# data : %s"%data)
     logger.debug("#######################")
-
 
     if data["subaction"] == "pong":
         if "manifest" in data:
@@ -44,18 +43,13 @@ def action(objectxmpp, action, sessionid, data, message):
                 # Reload all the elements in the to_reload list
                 objectxmpp.plugins.reload(to_reload)
 
+        if "substitute_jid" in data and data["substitute_jid"] != "":
+            objectxmpp.substitute_jid = data["substitute_jid"]
 
-        logger.info("Machine %s is ready to work !"%objectxmpp.uuid)
         objectxmpp.send_log("Machine %s is ready to work !"%objectxmpp.uuid, "info")
 
         # Give the hand to askworkflow plugin
+        logger.info("Machine %s is ready to work !"%objectxmpp.uuid)
+
+        message["from"] = objectxmpp.boundjid.bare
         objectxmpp.callplugin("askworkflow", sessionid, {}, message)
-
-
-def decode_decompress(content):
-    """Decode base64 content string, then decompress the binary"""
-
-    result = zlib.decompress(base64.b64decode(content)).decode("utf-8")
-
-    return result
-

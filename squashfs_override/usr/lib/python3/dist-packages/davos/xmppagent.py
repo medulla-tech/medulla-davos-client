@@ -2,14 +2,11 @@ from slixmpp import ClientXMPP, jid
 from slixmpp.xmlstream import handler, matcher
 from slixmpp.xmlstream.stanzabase import ET
 from slixmpp.exceptions import *
-
 from davos.utils import *
-import asyncio
 import sys
 import logging
 import json
 import base64
-import signal
 import os
 import importlib.util
 
@@ -214,11 +211,15 @@ class MUCBot(ClientXMPP):
         self.logger.info("self.boundjid = %s"%self.boundjid)
         self.logger.info("self.ipv4 = %s"%self.ipv4)
 
+        # Filled from davos kernel opts
         self.uuid=""
         self.mac=""
         self.relay_jid = to
         self.action_id = 0
+        self.domain = ""
+        # Filled on the fly when a message present the info. Set by default in init_xmpp function
         self.sessionid = getRandomName(8, "davos")
+        self.substitute_jid = ""
         self.workflow = {}
 
         self.plugins = PluginManager(self)
@@ -237,7 +238,6 @@ class MUCBot(ClientXMPP):
         self.logger.error("Connection lost, reason:%s"%data)
 
     def session_start(self, event):
-        self.logger.error("session_start")
         self.send_presence()
         self.get_roster()
         self.send_ping()
@@ -276,20 +276,30 @@ class MUCBot(ClientXMPP):
             # self.disconnect()
 
     async def message(self, msg):
-        _from = msg["from"]
+        """Get received messages. If there is an action associated to the message, send a response. Works exactly the same as agent plugins messages.
+
+        Recv:
+            - action (str): action name to execute. Correspond to a plugin. If action = aaa, the action from plugin_aaa (if it exists) is executed.
+            - data (str): stringified json of datas needed by action.
+        """
         data = {}
 
+        # Load the message body as json.
         try:
             data = json.loads(msg["body"])
         except Exception as e:
             self.logger.error("Message %s not correctly formated"%(msg["body"], e))
             return
 
+        # Check and extract some info in data.
         if "action" not in data:
             self.logger.error("Action missing in message")
+            return
 
         action = data["action"]
         sessionid = data["sessionid"]
+        # data corresponds to the global datas sent, with meta, config, action datas ...
+        # _data corresponds to the json payload needed by the action.
         _data = {}
         if "data" in data:
             _data = data["data"]
@@ -306,7 +316,6 @@ class MUCBot(ClientXMPP):
     async def stop(self):
         self.logger.debug("Stopping XMPP client...")
         self.disconnect()
-
 
     def handle_disconnected(self, data):
         self.logger.debug("Disconnected")
@@ -354,10 +363,26 @@ class MUCBot(ClientXMPP):
             msg["sessionid"] = sessionid
         self.plugins.execute(key, sessionid, data, msg)
 
+    def execute_workflow(self, workflow=[]):
+        """Do some checks on the workflow datas and launch it.
 
-    def execute_workflow(self, workflow):
+        Args:
+            self (MUCBot): Instanciation of MUCBot Object.
+            workflow (list, default=[]): the workflow to execute.
+        """
+        nb_steps = len(workflow)
+
+        # Strange case: no steps on the action
+        if nb_steps ==0:
+            self.send_log("The action you requested has nothing to do...", "warning")
+            runInShell("reboot")
+            return
+
+        workflow = [step for step in workflow if step != {}]
+
         self.send_log("Start Workflow Execution", "info")
-        self.logger.debug("Start Workflow Execution")
+        self.logger.info("Start Workflow Execution")
+
         i = 0
         for step in workflow:
             self.send_log("Step <%s> %s (type : %s)"%(i, step["name"], step["type"]), "info")
@@ -365,6 +390,6 @@ class MUCBot(ClientXMPP):
             self.execute_step(step)
             i += 1
 
-    def execute_step(self, step):
-        self.logger.error("Execute step %s"%step)
-        
+    def execute_step(self, step={}):
+        self.logger.debug("Execute step %s"%step)
+        self.send_log("Execute step %s"%step)
