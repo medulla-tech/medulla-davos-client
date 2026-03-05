@@ -32,13 +32,16 @@ import json
 import re
 import base64
 
+
 class davosManager(object):
 
     debug_mode = True
+    log_inited = False
 
     def __init__(self):
 
         # Init logger
+        self.logger = logging.getLogger('davos')
         self.initLogger()
 
         self.logger.debug('Initializing davos')
@@ -146,7 +149,6 @@ class davosManager(object):
             self.xmpp_jid = "%s@%s/%s"%(self.uuid, self.xmpp_domain, self.mac)
             self.xmpp_passwd = "davos%s"%self.uuid
 
-            # self.init_xmpp()
             self.init_xmpp()
         else:
             self.init_legacy()
@@ -174,12 +176,13 @@ class davosManager(object):
             xmpp.disconnect()
 
         try:
-            xmpp.loop.run_forever()
+            # New way to run the event loop : slixmpp handles it
+            xmpp.process(forever=True)
         except Exception as e:
 
             self.logger.error(f"Agent can't run {e}")
         finally:
-            xmpp.loop.close()
+            xmpp.disconnect()
 
 
     def init_legacy(self):
@@ -197,7 +200,8 @@ class davosManager(object):
             self.createPartimagSymlink()
 
     def initLogger(self):
-        self.logger = logging.getLogger('davos')
+        if davosManager.log_inited is True:
+            return
         self.log_level = level = logging.DEBUG #logging.DEBUG
 
         # Init logger
@@ -214,6 +218,7 @@ class davosManager(object):
             self.logger.addHandler(hdlr2)
 
         self.logger.setLevel(level)
+        davosManager.log_inited = True
 
 
     def getKernelParams(self):
