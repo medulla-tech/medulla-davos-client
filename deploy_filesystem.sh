@@ -34,6 +34,13 @@ chroot . bash -c 'apt-get clean -y '
 chroot . bash -c 'apt-get autoremove -y '
 chroot . bash -c 'find /var/lib/apt/lists/ -maxdepth 1 -type f -exec rm -v {} \;'
 
+# # slixmpp wget command
+chroot . bash -c 'wget https://files.pythonhosted.org/packages/8b/1c/6ce021fb5524b41330d583956d1ff8e508c95d6c1bb0ed34790e754cc8d2/slixmpp-1.13.2.tar.gz'
+chroot . bash -c 'tar -xvzf slixmpp-1.13.2.tar.gz'
+chroot . bash -c 'cp -r slixmpp-1.13.2/slixmpp /usr/lib/python3/dist-packages/'
+chroot . bash -c 'rm -frv slixmpp-1.13.2*'
+
+
 rm -f ./etc/resolv.conf
 umount ./proc
 
