@@ -443,7 +443,7 @@ class MUCBot(ClientXMPP):
 
 
         self.logger.debug("End of workflow ... Rebooting in 5 secs.")
-        self.runInShell("reboot")
+        runInShell("reboot")
 
     def execute_step(self, step={}):
         plugin_name="launch%s"%(step["type"])
