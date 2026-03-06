@@ -4,6 +4,10 @@ import random
 import base64
 import zlib
 import json
+import psutil
+import fcntl
+import socket
+import struct
 
 def runInShell(cmd, *args):
     # If cmd is str and args are not empty remplace them (format)
@@ -59,3 +63,25 @@ def compress_encode(content):
 
     result = base64.b64encode(zlib.compress(content.encode("utf-8"))).decode("utf-8")
     return result
+
+def network_infos():
+    """Get network info. Extracted from inventory.
+
+    Returns:
+        tuple: interface, macaddress, ipaddress, netmask"""
+    pnic = psutil.net_io_counters(pernic=True)
+    stats = {}
+    for nicname in list(pnic.keys()):
+        stats[nicname] = pnic[nicname].bytes_sent
+    interface = max(stats, key=stats.get)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(sock.fileno(), 0x8927,  struct.pack('256s', interface[:15].encode('utf-8')))
+
+    macaddress = ':'.join(['%02x' % char for char in info[18:24]])
+    ipaddress = socket.inet_ntoa(fcntl.ioctl(sock.fileno(), 0x8915, struct.pack('256s', interface[:15].encode('utf-8')))[20:24])
+    netmask = socket.inet_ntoa(fcntl.ioctl(sock.fileno(), 0x891b, struct.pack('256s', interface.encode('utf-8')))[20:24])
+
+    sock.close()
+
+    return (interface, macaddress, ipaddress, netmask)

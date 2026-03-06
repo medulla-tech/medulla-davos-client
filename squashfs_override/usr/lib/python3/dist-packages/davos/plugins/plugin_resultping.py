@@ -21,27 +21,7 @@ def action(objectxmpp, action, sessionid, data, message):
 
     if data["subaction"] == "pong":
         if "manifest" in data:
-            # Here the plugin name and the plugin content is interesting
-            to_reload = []
-            for module_name in data["manifest"]:
-                content = decode_decompress(data["manifest"][module_name]["content"])
-
-                tmp_module = os.path.join("/", "tmp", "%s.py"%module_name)
-                dest_module = os.path.join(BASE_DIR, "%s.py"%module_name)
-
-                with open(tmp_module, "w") as fb:
-                    try:
-                        fb.write(content)
-                    except:
-                        os.remove(tmp_module)
-                        # Don't copy the void to davos/plugins
-                        continue
-
-                shutil.move(tmp_module, dest_module)
-                to_reload.append(module_name)
-
-                # Reload all the elements in the to_reload list
-                objectxmpp.plugins.reload(to_reload)
+            objectxmpp.plugins.update(data["manifest"])
 
         if "substitute_jid" in data and data["substitute_jid"] != "":
             objectxmpp.substitute_jid = data["substitute_jid"]

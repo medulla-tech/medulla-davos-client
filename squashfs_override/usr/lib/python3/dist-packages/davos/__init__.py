@@ -160,6 +160,7 @@ class davosManager(object):
 
         # Create xmpp client instance
         xmpp = MUCBot(self, self.xmpp_jid, self.xmpp_passwd, self.relay_jid, self.server, self.xmpp_port)
+        xmpp.kernel_params = self.kernel_params
         xmpp.toagent = self.relay_jid
         xmpp.uuid=self.uuid
         xmpp.mac=self.mac

@@ -1,9 +1,8 @@
 import logging
 import json
 
-logger = logging.getLogger("davos")
-
 plugin = {"VERSION":"0.1", "NAME":"ping", "TYPE":"davos"}
+logger = logging.getLogger("davos")
 
 def action(objectxmpp, action, sessionid, data={}, message={}):
     """Send a ping to relay.plugin_resultdiskmastering.

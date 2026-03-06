@@ -10,6 +10,8 @@ import base64
 import os
 import importlib.util
 import time
+import shutil
+
 
 logger = logging.getLogger("davos")
 
@@ -134,8 +136,36 @@ class PluginManager:
             self._plugins[key] = module
             self.logger.debug("%s Successfully loaded"%key)
 
-    def reload(self, module_names=[]):
+    def update(self, manifest):
 
+        if manifest == {}:
+            return
+
+        to_reload = []
+
+        for module_name in manifest:
+            content = decode_decompress(manifest[module_name]["content"])
+
+            tmp_module = os.path.join("/", "tmp", "%s.py"%module_name)
+            dest_module = os.path.join(BASE_DIR,"plugins", "%s.py"%module_name)
+
+            with open(tmp_module, "w") as fb:
+                try:
+                    fb.write(content)
+                except:
+                    os.remove(tmp_module)
+                    # Don't copy the void to davos/plugins
+                    continue
+
+            shutil.move(tmp_module, dest_module)
+            to_reload.append(module_name)
+
+        # Reload all the elements in the to_reload list
+        self.reload(to_reload)
+
+
+
+    def reload(self, module_names=[]):
         plugins_dir = os.path.join(BASE_DIR, "plugins")
 
         for module_name in module_names:
@@ -143,22 +173,24 @@ class PluginManager:
             # Check on module_name
             if module_name.startswith("plugin_") is False:
                 self.logger.error("Impossible to load %s : is not a plugin"%module_name)
-                return False
+                continue
 
             # Check on absolute path for module_name
             module_path = os.path.join(plugins_dir, "%s.py"%module_name)
             module = self._load_plugin_from_file(module_path)
 
             if module is None:
-                return False
+                continue
 
             if self._check_plugin_integrity(module) is False:
-                return False
+                continue
 
             # Del current module and replace it by the new one only at the end.
-            self.logger.debug("=== Updating %s %s => %s"%(module_name, self._plugins[name].plugin["VERSION"], module.plugin["VERSION"]) )
             if name in self._plugins:
+                self.logger.debug("=== Updating %s %s => %s"%(module_name, self._plugins[name].plugin["VERSION"], module.plugin["VERSION"]) )
                 del(self._plugins[name])
+            else:
+                self.logger.debug("=== Adding %s %s"%(module_name, module.plugin["VERSION"]) )
 
             self._plugins[name] = module
             self._manifest[module_name] = module.plugin["VERSION"]
@@ -173,7 +205,13 @@ class PluginManager:
                 fnc(self._objectxmpp, action, sessionid, data, message)
             except Exception as e:
                 self.logger.error("Error during %s execution : %s"%(action, e))
-                return
+                return False
+        else:
+            self.logger.error("Action %s not found in plugins list"%action)
+            self._objectxmpp.send_log("Action %s not found in plugins list"%action, "error")
+            return False
+        return True
+
     def get_manifest(self):
         return self._manifest
 
@@ -224,6 +262,8 @@ class MUCBot(ClientXMPP):
         self.relay_jid = to
         self.action_id = 0
         self.domain = ""
+        self.kernel_params = {}
+
         # Filled on the fly when a message present the info. Set by default in init_xmpp function
         self.sessionid = getRandomName(8, "davos")
         self.substitute_jid = ""
@@ -401,6 +441,18 @@ class MUCBot(ClientXMPP):
             self.execute_step(step)
             i += 1
 
+
+        self.logger.debug("End of workflow ... Rebooting in 5 secs.")
+        self.runInShell("reboot")
+
     def execute_step(self, step={}):
+        plugin_name="launch%s"%(step["type"])
+        self.send_log("Execute step %s"%step, "info")
         self.logger.debug("Execute step %s"%step)
-        self.send_log("Execute step %s"%step)
+        ret = self.callplugin(plugin_name, self.sessionid, data=step)
+        if ret is False:
+            self.logger.error("Something went wrong during %s execution"%step)
+            self.send_log("Something went wrong during %s execution"%step, "error")
+
+        self.logger.info("End of Execution for step %s"%step)
+        return
