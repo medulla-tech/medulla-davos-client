@@ -33,14 +33,14 @@ def action(objectxmpp, action, sessionid, data, message):
             datasend["to"] = objectxmpp.relay_jid
             datasend["action"] = "resultdiskmastering"
 
-            logger.debug("send %s to relay"%datasend)
-            objectxmpp.send_log("Machine %s asking workflow for action %s to relay"%(objectxmpp.uuid, objectxmpp.action_id), "info")
+            logger.debug("Machine %s asking workflow for action %s to relay %s"%(objectxmpp.uuid, objectxmpp.action_id, objectxmpp.relay_jid))
+            objectxmpp.send_log("Machine %s asking workflow for action %s to relay %s"%(objectxmpp.uuid, objectxmpp.action_id, objectxmpp.relay_jid), "info")
 
             # substitute diskmastering jid not set, send it to relay
             objectxmpp.send_json(objectxmpp.relay_jid, datasend)
         else:
-            logger.debug("send %s to substitute"%datasend)
-            objectxmpp.send_log("Machine %s asking workflow for action %s to substitute"%(objectxmpp.uuid, objectxmpp.action_id), "info")
+            logger.info("Machine %s asking workflow for action %s to substitute %s"%(objectxmpp.uuid, objectxmpp.action_id, objectxmpp.substitute_jid))
+            objectxmpp.send_log("Machine %s asking workflow for action %s to substitute %s"%(objectxmpp.uuid, objectxmpp.action_id, objectxmpp.substitute_jid), "info")
 
             # substitute diskmastering jid set, send it directly to
             objectxmpp.send_json(objectxmpp.substitute_jid, datasend)

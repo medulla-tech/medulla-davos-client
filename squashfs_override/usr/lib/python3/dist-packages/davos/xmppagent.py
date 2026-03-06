@@ -9,6 +9,7 @@ import json
 import base64
 import os
 import importlib.util
+import time
 
 logger = logging.getLogger("davos")
 
@@ -70,8 +71,14 @@ class PluginManager:
 
         # Check if there is a plugin descriptor
         if hasattr(module, "plugin") is False:
-            self.logger.error("Plugin Descriptor missing for plugin %s can't use versionning"%module_name)
+            self.logger.error("Plugin Descriptor missing for plugin %s can't use versionning"%module)
             return False
+
+        if "NAME" not in module.plugin:
+            self.logger.error("No name found for  plugin %s can't use versionning"%module)
+            return False
+
+        module_name = "plugin_%s"%module.plugin["NAME"]
 
         if "VERSION" not in module.plugin:
             self.logger.error("No version found for %s, can't load it because we can't versionning it!"%module_name)
@@ -220,6 +227,7 @@ class MUCBot(ClientXMPP):
         # Filled on the fly when a message present the info. Set by default in init_xmpp function
         self.sessionid = getRandomName(8, "davos")
         self.substitute_jid = ""
+        self.fullaction = {}
         self.workflow = {}
 
         self.plugins = PluginManager(self)
@@ -372,13 +380,16 @@ class MUCBot(ClientXMPP):
         """
         nb_steps = len(workflow)
 
+        # cleanup possible empty steps
+        workflow = [step for step in workflow if step != {}]
+
         # Strange case: no steps on the action
         if nb_steps ==0:
-            self.send_log("The action you requested has nothing to do...", "warning")
+            self.send_log("The action you requested has nothing to do.", "error")
+            self.logger.error("The action you requested has nothing to do. Reboot in 5 secs !!")
+            time.sleep(5)
             runInShell("reboot")
             return
-
-        workflow = [step for step in workflow if step != {}]
 
         self.send_log("Start Workflow Execution", "info")
         self.logger.info("Start Workflow Execution")

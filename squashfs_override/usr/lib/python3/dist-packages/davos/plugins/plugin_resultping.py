@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 plugin = {"VERSION": "0.1", "NAME": "resultping", "TYPE": "davos"}
 
 def action(objectxmpp, action, sessionid, data, message):
-    """Receive pong from relay, ask the workflow to execute"""
+    """Receive pong from relay, update the plugins and launch askworkflow"""
 
     logger.debug("#######################")
     logger.debug("# plugin_%s"%action)
