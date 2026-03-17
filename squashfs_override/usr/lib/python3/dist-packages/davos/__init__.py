@@ -169,6 +169,12 @@ class davosManager(object):
         xmpp.domain = self.xmpp_domain
         xmpp.substitute_jid = "master_dma@%s"%self.xmpp_domain
 
+        # Setup the nfs mountpoints
+        xmpp.mounts.load("masters", "/var/lib/pulse2/imaging/masters/", "/imaging_server/masters/", self.xmpp_server)
+        xmpp.mounts.load("postinstalls", "/var/lib/pulse2/imaging/postinst/", "/opt", self.xmpp_server)
+        xmpp.mounts.load("certs", "/var/lib/pulse2/imaging/certs", "/mnt/certs", self.xmpp_server)
+        xmpp.mounts.load("logs", "/var/lib/pulse2/imaging/logs/", "/mnt/logs", self.xmpp_server)
+
         # Connect
         try:
             xmpp.connect((self.xmpp_server, self.xmpp_port))
@@ -179,8 +185,8 @@ class davosManager(object):
         try:
             # New way to run the event loop : slixmpp handles it
             xmpp.process(forever=True)
-        except Exception as e:
 
+        except Exception as e:
             self.logger.error(f"Agent can't run {e}")
         finally:
             xmpp.disconnect()

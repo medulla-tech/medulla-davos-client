@@ -7,7 +7,7 @@ logger = logging.getLogger("davos")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-plugin = {"VERSION": "0.1", "NAME": "resultping", "TYPE": "davos"}
+plugin = {"VERSION": "0.16", "NAME": "resultping", "TYPE": "davos"}
 
 def action(objectxmpp, action, sessionid, data, message):
     """Receive pong from relay, update the plugins and launch askworkflow"""
@@ -20,16 +20,32 @@ def action(objectxmpp, action, sessionid, data, message):
     logger.debug("#######################")
 
     if data["subaction"] == "pong":
+
         if "manifest" in data:
             objectxmpp.plugins.update(data["manifest"])
 
         if "substitute_jid" in data and data["substitute_jid"] != "":
             objectxmpp.substitute_jid = data["substitute_jid"]
 
-        objectxmpp.send_log("Machine %s is ready to work !"%objectxmpp.uuid, "info")
+        # objectxmpp.send_log("Machine %s is ready to work !"%objectxmpp.uuid, "info")
 
         # Give the hand to askworkflow plugin
         logger.info("Machine %s is ready to work !"%objectxmpp.uuid)
 
         message["from"] = objectxmpp.boundjid.bare
-        objectxmpp.callplugin("askworkflow", sessionid, {}, message)
+        message["to"] = objectxmpp.boundjid.bare
+        message["sessionid"] = sessionid
+
+        datasend = {
+            "from":objectxmpp.boundjid.bare,
+            "to": objectxmpp.boundjid.bare,
+            "action": "askworkflow",
+            "sessionid":sessionid,
+            "data": {
+                "subaction": "launch",
+                "sessionid": sessionid,
+                "to": objectxmpp.boundjid.bare,
+            }
+        }
+        objectxmpp.send_json(objectxmpp.boundjid.bare, datasend)
+        return

@@ -19,6 +19,48 @@ logging.getLogger("slixmpp").setLevel(logging.DEBUG)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+class MountManager:
+    def __init__(self, objectxmpp):
+        self._objectxmpp = objectxmpp
+        self._mounts = {}
+
+    def has(self, key):
+        return key in self._mounts
+
+    def load(self, key, src, dest, server=""):
+        """Create a mount point and mount it.
+
+        Args:
+            self (MountManager): Instance of MountManager Object.
+            key (str): name associated to the mount point.
+            src (str): source path to mount
+            dest (str): dest path where src is mounted. If dest folder doesn't exists it is created
+            server (str, default=""): if nfs mount mount server:src into dest
+
+        Returns:
+            bool: True if the mount point has been loaded. Else False"""
+        if key in self._mounts:
+            return True
+
+        tmp = Mount(src, dest, server)
+        tmp.mount()
+        self._mounts[key] = tmp
+        return True
+
+    def get(self, key):
+        """Get the mount point corresponding to the key
+
+        Args:
+            self (MountManager): Instance of MountManager Object.
+            key (str): name associated to the mount point.
+
+        Returns:
+            None|Mount: None if nothing has been found, else the Mount object corresponding to the key."""
+        if key not in self._mounts:
+            return None
+
+        return self._mounts[key]
+
 
 class PluginManager:
     def __init__(self, objectxmpp):
@@ -271,6 +313,7 @@ class MUCBot(ClientXMPP):
         self.workflow = {}
 
         self.plugins = PluginManager(self)
+        self.mounts = MountManager(self)
 
     def handle_connecting (self, datas):
         self.logger.debug(f"Try to connect Agent {self.boundjid.bare}")
@@ -343,6 +386,9 @@ class MUCBot(ClientXMPP):
         if "action" not in data:
             self.logger.error("Action missing in message")
             return
+        if "sessionid" not in data:
+            self.logger.error("Session missing in message")
+            return
 
         action = data["action"]
         sessionid = data["sessionid"]
@@ -355,11 +401,15 @@ class MUCBot(ClientXMPP):
         # ################# #
         # Launch the plugin #
         # ################# #
-        try:
-            self.plugins.execute(action, sessionid, _data, msg)
-        except Exception as e:
-            self.logger.error("Error during %s execution : %s"%(action, e))
-            return
+
+        async def _launch():
+            try:
+                self.plugins.execute(action, sessionid, _data, msg)
+            except Exception as e:
+                self.logger.error("Error during %s execution : %s"%(action, e))
+            await(asyncio.sleep(1))
+
+        objectxmpp.loop.create_task(_launch())
 
     async def stop(self):
         self.logger.debug("Stopping XMPP client...")
@@ -381,17 +431,19 @@ class MUCBot(ClientXMPP):
 
 
     def send_ping(self):
-        self.callplugin("ping", self.sessionid)
+        return self.callplugin("ping", self.sessionid)
 
     def send_log(self, mesg, level="info"):
         datasend = {
             "from":self.boundjid.bare,
-            "to":self.toagent,
+            "to":self.relay_jid,
             "sessionid":self.sessionid,
             "action":"resultdiskmastering",
             "data":{
                 "subaction":"log",
                 "sessionid":self.sessionid,
+                "action_id":self.action_id,
+                "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "uuid":self.uuid,
                 "mac":self.mac,
                 "server":self.relay_jid,
@@ -401,15 +453,21 @@ class MUCBot(ClientXMPP):
             "ret":0,
             "base64":False
         }
+
         datasend = json.dumps(datasend)
         self.send_message(self.relay_jid, datasend)
+        return
+
 
     def callplugin(self, key, sessionid, data={}, msg={}):
 
         if msg == {}:
             msg["from"] = self.boundjid.bare
             msg["sessionid"] = sessionid
-        self.plugins.execute(key, sessionid, data, msg)
+        try:
+            self.plugins.execute(key, sessionid, data, msg)
+        except Exception as e:
+            logger.error("Failed to call plugin %s :%s"%(key, e))
 
     def execute_workflow(self, workflow=[]):
         """Do some checks on the workflow datas and launch it.
@@ -427,8 +485,8 @@ class MUCBot(ClientXMPP):
         if nb_steps ==0:
             self.send_log("The action you requested has nothing to do.", "error")
             self.logger.error("The action you requested has nothing to do. Reboot in 5 secs !!")
-            time.sleep(5)
-            runInShell("reboot")
+            # time.sleep(5)
+            # runInShell("reboot")
             return
 
         self.send_log("Start Workflow Execution", "info")
@@ -443,7 +501,9 @@ class MUCBot(ClientXMPP):
 
 
         self.logger.debug("End of workflow ... Rebooting in 5 secs.")
-        runInShell("reboot")
+        # Ask what to don when workflow is done
+
+        # runInShell("reboot")
 
     def execute_step(self, step={}):
         plugin_name="launch%s"%(step["type"])

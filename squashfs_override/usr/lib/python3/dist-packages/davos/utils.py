@@ -9,6 +9,7 @@ import fcntl
 import socket
 import struct
 
+
 def runInShell(cmd, *args):
     # If cmd is str and args are not empty remplace them (format)
     if isinstance(cmd, str) and args:
@@ -46,9 +47,7 @@ def getRandomName(nb, pref=""):
 
 def decode_decompress(content):
     """Decode base64 content string, then decompress the binary"""
-
     result = zlib.decompress(base64.b64decode(content)).decode("utf-8")
-
     return result
 
 
@@ -65,10 +64,6 @@ def compress_encode(content):
     return result
 
 def network_infos():
-    """Get network info. Extracted from inventory.
-
-    Returns:
-        tuple: interface, macaddress, ipaddress, netmask"""
     pnic = psutil.net_io_counters(pernic=True)
     stats = {}
     for nicname in list(pnic.keys()):
@@ -85,3 +80,95 @@ def network_infos():
     sock.close()
 
     return (interface, macaddress, ipaddress, netmask)
+
+
+class Mount:
+    """Class to handle mount command"""
+    def __init__(self, src, dest, server=""):
+        """Instanciate Mount class, corresponding to a mount point / mount nfs point
+
+        Args:
+            self (Mount): Instance of Mount Object
+            src (str): source path to mount
+            dest (str): dest path where src is mounted. If dest folder doesn't exists it is created
+            server (str, default=""): if nfs mount mount server:src into dest
+            """
+        self.src = src
+        self.dest = dest
+        self.server = server
+        # Initialize is_mounted
+        self.is_mounted = False
+        # And determine its current state
+        self.status()
+
+    def mount(self):
+        """Try to mount [server:]src into dest
+
+        Args:
+            self (Mount): Instance of Mount Object
+        """
+        # Already mounted : no need to mount it.
+        if self.is_mounted is True:
+            return
+        # Src or Dest empty, can't mount it, server can be empty
+        if self.src == "" or self.dest == "":
+            return
+        if not os.path.exists(self.dest):
+            os.makedirs(self.dest, exist_ok=True)
+        # Not mounted : mount it
+        if self.server != "":
+            cmd = "mount %s:%s %s"%(self.server, self.src, self.dest)
+        else:
+            cmd = "mount %s %s"%(self.src, self.dest)
+        o, e, s = runInShell(cmd)
+        if s == 0:
+            self.is_mounted = True
+
+    def unmount(self):
+        """Unmount the mounted dest if mounted
+
+        Args (self): Instance of Mount Object"""
+        if self.status() is False:
+            return
+        if self.dest == "":
+            return
+        # Mounted : unmount it
+        cmd = "umount %s"%self.dest
+        o, e, s = runInShell(cmd)
+
+    def status(self):
+        """Get the mount status.
+
+        Args:
+            self (Mount): Instance of Mount Object.
+
+        Returns:
+            bool: True if the mount point is mounted. Else False"""
+        # Update the current state
+        self.check_status()
+        # return the result
+        return self.is_mounted
+
+    def check_status(self):
+        """Update the mount status. Used by status, to be sure it's always accurate
+
+        Args:
+            (self): Instance of Mount Object."""
+        # Check the current state and update it.
+        if self.dest == "":
+            self.is_mounted = False
+        if os.path.isdir(self.dest) is False:
+            self.is_mounted = False
+        cmd = "cat /proc/mounts | grep %s"%self.dest
+        o, e, s = runInShell(cmd)
+        if o.decode("utf-8") != "":
+            self.is_mounted = True
+        else:
+            self.is_mounted = False
+
+    def __del__(self):
+        """Automatically unmount the mount point when the object is deleted
+
+        Args:
+            self (Mount): Instance of Mount Object"""
+        self.unmount()
