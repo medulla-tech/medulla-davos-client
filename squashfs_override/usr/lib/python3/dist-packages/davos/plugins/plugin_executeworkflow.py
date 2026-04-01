@@ -14,7 +14,7 @@ import subprocess
 import shutil
 import asyncio
 
-plugin = {"VERSION": "0.306", "NAME":"executeworkflow", "TYPE":"davos"}
+plugin = {"VERSION": "0.1", "NAME":"executeworkflow", "TYPE":"davos"}
 
 logger = logging.getLogger("davos")
 
@@ -43,7 +43,7 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
     # -1 => end of workflow
     if step == -1:
-        objectxmpp.sendlog("#### End of workflow", "info")
+        objectxmpp.send_log("#### End of workflow", "info")
         return
 
     # Skip wrong steps
@@ -88,7 +88,7 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
         "data": data
     }
     objectxmpp.send_json(message["from"], datasend)
-    logger.error("## End of executeworkflow Execution ##")
+    logger.debug("## End of executeworkflow Execution ##")
     
     return
     

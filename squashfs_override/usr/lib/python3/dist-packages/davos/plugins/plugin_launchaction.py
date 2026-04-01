@@ -15,7 +15,7 @@ import shutil
 import asyncio
 import threading
 
-plugin = {"VERSION": "0.055", "NAME":"launchaction", "TYPE":"davos"}
+plugin = {"VERSION": "0.1", "NAME":"launchaction", "TYPE":"davos"}
 
 logger = logging.getLogger("davos")
 
@@ -41,7 +41,7 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
         # register a new machine
         if data["name"] == "register":
             objectxmpp.loop.create_task(action_register(objectxmpp, data))
-    
+
         # mastering the machine
         elif data["name"] == "mastering":
             objectxmpp.send_log("Starting process", "info")
@@ -52,7 +52,20 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
         elif data["name"] == "deploy":
             return action_deploy(objectxmpp, data)
-    
+
+
+def call_next_action(objectxmpp, data):
+
+    data["step"] = data["step"] + 1
+
+    datasend = {
+        "action": "executeworkflow",
+        "from": objectxmpp.boundjid.bare,
+        "sessionid": objectxmpp.sessionid,
+        "data": data
+    }
+
+    objectxmpp.send_json(objectxmpp.boundjid.bare, datasend)
 
 async def action_register(objectxmpp, data):
     # Change step status
@@ -83,6 +96,8 @@ async def action_register(objectxmpp, data):
 
     # End of step execution, change the status to DONE.
     data["status"] = "DONE"
+    call_next_action(objectxmpp, data)
+
 
 def send_log(objectxmpp, proc):
     for line in proc.stdout:
@@ -109,7 +124,7 @@ async def action_mastering(objectxmpp, data):
 
     # TODO: Launch a "done" signal to the relay
     data["status"] = "DONE"
-
+    call_next_action(objectxmpp, data)
     return
 
 
@@ -218,7 +233,7 @@ def generate_inventory(objectxmpp, data):
         return
 
     logger.info("Inventory /tmp/inventory.xml file generated successfully !")
-    
+
     _dom = parse('/tmp/inventory.xml')
 
     # Replace ARCHNAME, OSNAME and OSCOMMENTS

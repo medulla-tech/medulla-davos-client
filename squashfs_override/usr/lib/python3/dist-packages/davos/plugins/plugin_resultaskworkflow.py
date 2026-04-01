@@ -3,7 +3,7 @@ import time
 
 logger = logging.getLogger("davos")
 
-plugin = {"VERSION": "0.007", "NAME": "resultaskworkflow", "TYPE": "davos"}
+plugin = {"VERSION": "0.1", "NAME": "resultaskworkflow", "TYPE": "davos"}
 
 def action(objectxmpp, action, sessionid, data, message):
     """ Receive workflow from relay.plugin_resultdiskmastering or master.diskmastering"""

@@ -11,7 +11,7 @@ import os
 import importlib.util
 import time
 import shutil
-
+import asyncio
 
 logger = logging.getLogger("davos")
 
@@ -409,7 +409,7 @@ class MUCBot(ClientXMPP):
                 self.logger.error("Error during %s execution : %s"%(action, e))
             await(asyncio.sleep(1))
 
-        objectxmpp.loop.create_task(_launch())
+        self.loop.create_task(_launch())
 
     async def stop(self):
         self.logger.debug("Stopping XMPP client...")
