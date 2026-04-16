@@ -48,33 +48,16 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
             objectxmpp.loop.create_task(action_mastering(objectxmpp, data))
 
 
-
-
         elif data["name"] == "deploy":
             return action_deploy(objectxmpp, data)
 
 
-def call_next_action(objectxmpp, data):
-
-    data["step"] = data["step"] + 1
-
-    datasend = {
-        "action": "executeworkflow",
-        "from": objectxmpp.boundjid.bare,
-        "sessionid": objectxmpp.sessionid,
-        "data": data
-    }
-
-    objectxmpp.send_json(objectxmpp.boundjid.bare, datasend)
-
 async def action_register(objectxmpp, data):
-    # Change step status
-    data["status"] = "WORKING"
-
     # set hostname
     set_hostname()
     # Generate inventory
     _xml = generate_inventory(objectxmpp, data)
+
     logger.info("Inventory Generation DONE !")
 
     datasend = {
@@ -94,10 +77,18 @@ async def action_register(objectxmpp, data):
     logger.info("Sending inventory to relay %s"%objectxmpp.relay_jid)
     objectxmpp.send_json(objectxmpp.relay_jid, datasend)
 
-    # End of step execution, change the status to DONE.
-    data["status"] = "DONE"
-    call_next_action(objectxmpp, data)
+    objectxmpp.workflow[data["step"]]["status"] = "DONE"
+    data["step"] = data["step"] + 1
 
+    datasend={
+        "action" : "executeworkflow",
+        "sessionid": objectxmpp.sessionid,
+        "from": objectxmpp.boundjid.bare,
+        "to": objectxmpp.boundjid.bare,
+        "data":data
+    }
+    objectxmpp.send_json(objectxmpp.boundjid.bare, datasend)
+    return
 
 def send_log(objectxmpp, proc):
     for line in proc.stdout:
@@ -105,33 +96,51 @@ def send_log(objectxmpp, proc):
         objectxmpp.send_log(line)
 
 async def action_mastering(objectxmpp, data):
-    data["status"] = "WORKING"
     master_uuid = configure_master(objectxmpp)
     device = get_device()
     yes, process = get_process(objectxmpp, master_uuid, device)
+
     while True:
         line = await objectxmpp.loop.run_in_executor(None, process.stdout.readline)
 
-        if line == "":
-            continue
+        if line.startswith("Ending /usr/sbin/ocs-sr at "):
+            break
         if not line:
             break
+        if line == "":
+            continue
+        print(line)
         objectxmpp.send_log(line.strip(), "info")
+
 
     await objectxmpp.loop.run_in_executor(None, process.wait)
 
     yes.terminate()
+    process.terminate()
 
-    # TODO: Launch a "done" signal to the relay
+    objectxmpp.send_log("Mastering process finished with return code %s"%process.returncode, "info")
+    datasend={
+        "sessionid": objectxmpp.sessionid,
+        "from": objectxmpp.boundjid.bare,
+        "to": objectxmpp.relay_jid,
+        "action":"resultdiskmastering",
+        "data":{
+            "subaction":"create_master",
+            "sessionid": objectxmpp.sessionid,
+            "master_uuid": master_uuid,
+            "action_id": objectxmpp.action_id,
+            "uuid": objectxmpp.uuid,
+            "mac": objectxmpp.mac,
+            "return_code": process.returncode
+        }
+    }
+    objectxmpp.send_json(objectxmpp.relay_jid, datasend)
     data["status"] = "DONE"
-    call_next_action(objectxmpp, data)
     return
-
 
 def configure_master(objectxmpp):
     clonezilla_params = ["-nogui", "-q2", "-c", "-j2", "-z1p", "-i", "100", "-sc", "-p", "true"]
 
-    # mpoint is a mounting point between (src)srv:/var/lib/pulse2/imaging/masters and (dest)/imaging_server/masters
     mpoint = objectxmpp.mounts.get("masters")
 
     if(mpoint.status() == False):
@@ -139,12 +148,13 @@ def configure_master(objectxmpp):
 
     # Define a master name.
     master_uuid = uuid.uuid1().__str__()
+    local_path = os.path.join(mpoint.dest, master_uuid)
 
-    # Check if /imaging_server/masters/<uuid> exists already
-    while os.path.isdir(os.path.join(mpoint.dest, master_uuid)) is True:
+
+    while os.path.isdir(local_path) is True:
         master_uuid = uuid.uuid1().__str__()
+        local_path = os.path.join(mpoint.dest, master_uuid)
 
-    # Working directory for clonezilla, we have to bind this path to /imaging_server/masters/, where /home/partimag will be a symbolic link.
     working_directory = '/home/partimag'
 
     # We want to be sure /home/partimag is deleted
@@ -159,13 +169,14 @@ def configure_master(objectxmpp):
     except Exception as e:
         pass
 
-        # link /imaging_server/masters to /home/partimag
-    os.symlink(mpoint.dest, working_directory)
+    os.symlink(local_path, working_directory)
 
-    # Create folder for this master. /imaging_server/masters/<uuid>   <-> /home/partimag/<uuid>
-    os.makedirs(os.path.join(working_directory, master_uuid))
+    # Create folder for this master.
+    os.makedirs(local_path)
 
+    server_path = os.path.join(mpoint.src, master_uuid)
     objectxmpp.send_log("Create working directory for master %s "%master_uuid, "info")
+
 
     # Set Fake Parclone mode
     os.environ['CLMODE'] = 'SAVE_IMAGE'
@@ -187,6 +198,10 @@ def get_device():
     return device
 
 def get_process(objectxmpp, master_uuid, device):
+    # cmd = 'yes 2>/dev/null|/bin/bash -c "/usr/sbin/ocs-sr %s savedisk %s %s > >(exec cat | tee -a /var/log/davos_saver.log) 2>&1"' % (clonezilla_params, master_uuid, device)
+    # error_code = subprocess.call('yes 2>/dev/null|/bin/bash -c "/usr/sbin/ocs-sr %s savedisk %s %s > >(exec cat | tee -a /var/log/davos_saver.log) 2>&1"' % (clonezilla_params, master_uuid, device), shell=True)
+
+
     cmd = ["/usr/sbin/ocs-sr", "-nogui", "-q2", "-c", "-j2", "-z1p", "-i", "100", "-sc", "-p", "true", "savedisk", master_uuid, device]
 
     logger.info("Launch SAVE MASTER process: %s"%(" ".join(cmd)))
@@ -202,6 +217,31 @@ def get_process(objectxmpp, master_uuid, device):
     yes.stdout.close()
 
     return yes, proc
+    """
+
+    # Save image JSON and LOG
+    info = {}
+    info['title'] = 'Image of %s at %s' % (self.manager.hostname, current_ts)
+    info['description'] = ''
+    info['size'] = sum(os.path.getsize(image_dir+f) for f in os.listdir(image_dir) if os.path.isfile(image_dir+f))
+    info['has_error'] = (error_code != 0)
+
+    log_path = os.path.join(image_dir, 'davos.log')
+    json_path = os.path.join(image_dir, 'davosInfo.json')
+
+    try:
+        open(log_path, 'w').write(open('/var/log/davos_saver.log', 'r').read())
+    except FileNotFoundError:
+        self.logger.error("The file /var/log/davos_saver.log does not exist")
+    except Exception as e:
+        self.logger.error("The error %s occured" % str(e))
+
+    try:
+        open(json_path, 'w').write(json.dumps(info))
+    except Exception:
+        self.logger.error("We failed to write the informations about the master")
+
+"""
 
 
 def action_deploy(objectxmpp, data):

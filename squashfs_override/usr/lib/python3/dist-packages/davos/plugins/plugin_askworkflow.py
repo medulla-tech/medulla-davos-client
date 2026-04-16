@@ -1,7 +1,7 @@
 import logging
 logger = logging.getLogger("davos")
 
-plugin = {"VERSION":"0.14", "NAME":"askworkflow", "TYPE":"davos"}
+plugin = {"VERSION":"0.1", "NAME":"askworkflow", "TYPE":"davos"}
 
 def action(objectxmpp, action, sessionid, data, message):
     """ Send a ping to relay.plugin_resultdiskmastering"""

@@ -29,7 +29,10 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
     step = -1
     count = len(objectxmpp.workflow)
 
-    if "step" in data:
+    if "step" not in data:
+        step = -1
+    else:
+        # we can extract step from data only if step is in data.
         try:
             step = int(data["step"])
         except:
@@ -37,24 +40,60 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
     # Can't launch non existing step
     if step >= count:
+
         step = -1
+
+    status = "TODO"
+    # a newer status is stored in cache, we use it as reference to update the workflow.
+    if "status" in data:
+        status = data["status"]
+
+    objectxmpp.workflow[step]["status"] = status
 
     # When step = -1, we reached the end of the workflow
 
     # -1 => end of workflow
     if step == -1:
+
         objectxmpp.send_log("#### End of workflow", "info")
+        datasend = {
+            "action" : "resultdiskmastering",
+            "sessionid": sessionid,
+            "from": objectxmpp.boundjid.bare,
+            "to": objectxmpp.relay_jid,
+            "data":{
+                "subaction":"workflow_done",
+                "sessionid": sessionid,
+                "uuid": objectxmpp.uuid,
+                "mac": objectxmpp.mac,
+                "server": objectxmpp.relay_jid,
+                "action_id": objectxmpp.action_id
+            }
+        }
+
+        objectxmpp.send_json(objectxmpp.relay_jid, datasend)
+
+        logger.debug("Workflow done, rebooting the machine in 3 seconds")
+        time.sleep(3)
+        # runInShell("reboot")
         return
 
     # Skip wrong steps
     if "status" not in objectxmpp.workflow[step] or objectxmpp.workflow[step] == {}:
+
+        step += 1
+        data["step"] = step
+
+    elif objectxmpp.workflow[step]["status"] == "DONE":
+
         step += 1
         data["step"] = step
 
     # Launch the currentstep
-    if objectxmpp.workflow[step]["status"] == "TODO":
+    elif objectxmpp.workflow[step]["status"] == "TODO":
+
         objectxmpp.send_log("Executing step <%s> : %s - Type: %s %s"%(step, objectxmpp.workflow[step]["name"], objectxmpp.workflow[step]["type"], objectxmpp.workflow[step]), "info")
-        
+
         stepaction = "launch%s"%objectxmpp.workflow[step]["type"]
         # stepaction = launchaction | launchscript
         send = {
@@ -70,15 +109,10 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
         objectxmpp.send_json(message["from"], send)
         return
 
+    # Stay on the current step,
+    elif objectxmpp.workflow[step]["status"] == "WORKING":
 
-    # Stay on the current step, 
-    if objectxmpp.workflow[step]["status"] == "WORKING":
         time.sleep(5)
-    
-
-    if objectxmpp.workflow[step]["status"] == "DONE":
-        step += 1
-        data["step"] = step
 
     datasend = {
         "action" : action,
@@ -88,8 +122,5 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
         "data": data
     }
     objectxmpp.send_json(message["from"], datasend)
-    logger.debug("## End of executeworkflow Execution ##")
-    
+
     return
-    
-    
