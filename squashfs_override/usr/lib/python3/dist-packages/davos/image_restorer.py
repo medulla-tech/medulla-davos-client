@@ -22,6 +22,7 @@
 import os
 import subprocess
 import json
+import base64
 import time
 import socket
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
@@ -194,6 +195,20 @@ class imageRestorer(object):
             postinst = self.manager.rpc.imaging_api.getPostInstallsFromProfile(self.manager.kernel_params['profile'])
         else:
             postinst = self.manager.rpc.imaging_api.getPostInstalls(image_uuid, target_uuid)
+
+        # Get back the json str from base64
+        try:
+            postinst = base64.b64decode(postinst).decode("utf-8")
+        except Exception as e:
+            self.logger.error("Error while decoding post-install scripts: %s", e)
+            postinst = "[]"
+
+        try:
+            postinst = json.loads(postinst)
+        except Exception as e:
+            self.logger.error("Error while loading post-install scripts json: %s", e)
+            postinst = []
+
         self.write_postinstalls(image_uuid, postinst)
         self.setlibpostinstVars()
         subprocess.call(['davos_postimaging', image_uuid])
