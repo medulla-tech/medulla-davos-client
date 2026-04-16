@@ -96,7 +96,18 @@ def send_log(objectxmpp, proc):
         objectxmpp.send_log(line)
 
 async def action_mastering(objectxmpp, data):
-    master_uuid = configure_master(objectxmpp)
+    def get_dir_size(path='.'):
+        total = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_file():
+                    total += entry.stat().st_size
+                elif entry.is_dir():
+                    total += get_dir_size(entry.path)
+        return total
+
+    logger.error("action_mastering")
+    master_path, master_uuid = configure_master(objectxmpp)
     device = get_device()
     yes, process = get_process(objectxmpp, master_uuid, device)
 
@@ -119,6 +130,14 @@ async def action_mastering(objectxmpp, data):
     process.terminate()
 
     objectxmpp.send_log("Mastering process finished with return code %s"%process.returncode, "info")
+
+    # Get the size of the master
+    # Use local path to get the size, but send the dest path to the relay.
+    local_path = os.path.join(objectxmpp.mounts.get("masters").dest, master_uuid)
+    master_size = get_dir_size(local_path)
+
+    master_fullpath = os.path.join(master_path, master_uuid)
+
     datasend={
         "sessionid": objectxmpp.sessionid,
         "from": objectxmpp.boundjid.bare,
@@ -128,6 +147,9 @@ async def action_mastering(objectxmpp, data):
             "subaction":"create_master",
             "sessionid": objectxmpp.sessionid,
             "master_uuid": master_uuid,
+            "master_path": master_path,
+            "master_fullpath": master_fullpath,
+            "master_size": master_size,
             "action_id": objectxmpp.action_id,
             "uuid": objectxmpp.uuid,
             "mac": objectxmpp.mac,
@@ -135,7 +157,18 @@ async def action_mastering(objectxmpp, data):
         }
     }
     objectxmpp.send_json(objectxmpp.relay_jid, datasend)
-    data["status"] = "DONE"
+
+    objectxmpp.workflow[data["step"]]["status"] = "DONE"
+    data["step"] = data["step"] + 1
+
+    datasend={
+        "action" : "executeworkflow",
+        "sessionid": objectxmpp.sessionid,
+        "from": objectxmpp.boundjid.bare,
+        "to": objectxmpp.boundjid.bare,
+        "data":data
+    }
+    objectxmpp.send_json(objectxmpp.boundjid.bare, datasend)
     return
 
 def configure_master(objectxmpp):
@@ -149,7 +182,6 @@ def configure_master(objectxmpp):
     # Define a master name.
     master_uuid = uuid.uuid1().__str__()
     local_path = os.path.join(mpoint.dest, master_uuid)
-
 
     while os.path.isdir(local_path) is True:
         master_uuid = uuid.uuid1().__str__()
@@ -168,20 +200,20 @@ def configure_master(objectxmpp):
         os.unlink(working_directory)
     except Exception as e:
         pass
+    # Clonezilla will work into /home/partimag/master_uuid
+    # So /home/partimag must be linked to the master folder in dest:
+    # os.symlink(local_path, working_directory)
+    os.symlink(mpoint.dest, working_directory)
 
-    os.symlink(local_path, working_directory)
-
-    # Create folder for this master.
-    os.makedirs(local_path)
+    # # Create folder for this master.
+    # os.makedirs(local_path)
 
     server_path = os.path.join(mpoint.src, master_uuid)
     objectxmpp.send_log("Create working directory for master %s "%master_uuid, "info")
 
-
     # Set Fake Parclone mode
     os.environ['CLMODE'] = 'SAVE_IMAGE'
-
-    return master_uuid
+    return (mpoint.src, master_uuid)
 
 
 def get_device():
