@@ -7,6 +7,7 @@ Standards-Version: 3.9.4
 Homepage: https://medulla-tech.io
 
 Package: medulla-davos-client
+Replaces: pulse2-davos-client
 Architecture: all
 Depends: ${misc:Depends}
 Description: Medulla 2 Davos imaging client
