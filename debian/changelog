@@ -1,3 +1,10 @@
+medulla-davos-client (0.55.0-0.20260220-questing.1)  stable; urgency=low
+
+   * Fix the postinstalls where not received and written 
+   * Update Clonezilla to 20260220-questing
+
+ -- Medulla Support <support@medulla-tech.io> Tue, 16 Apr 2026 11:00:00 +0100
+
 medulla-davos-client (0.54.0-0.20250620-plucky.1)  stable; urgency=low
 
    * Use UUID instead of MAC address for assocating machines 
