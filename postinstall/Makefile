@@ -30,6 +30,7 @@ include $(topdir)/extra.mk
 install-local:
 	mkdir -p $(DESTDIR)$(postinstdir)/bin
 	mkdir -p $(DESTDIR)$(postinstdir)/winutils
+	cp -a winutils $(DESTDIR)$(postinstdir)/
 	mkdir -p $(DESTDIR)$(postinstdir)/macutils
 	cp -a macutils $(DESTDIR)$(postinstdir)/
 	mkdir -p $(DESTDIR)$(postinstdir)/linuxutils
