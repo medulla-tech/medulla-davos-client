@@ -276,7 +276,9 @@ async def action_deploy(objectxmpp, data):
         if line == "":
             continue
         print(line)
-        objectxmpp.send_log(line.strip(), "info")
+        _line = line.strip()
+        if _line != "":
+            objectxmpp.send_log(_line, "info")
 
     await objectxmpp.loop.run_in_executor(None, process.wait)
 
@@ -309,7 +311,6 @@ def deploy_get_process(objectxmpp, master_uuid, device, image_type):
     #     parted /dev/{device} set 2 msftdata on
 
     # """
-
     yes = subprocess.Popen(["yes"], stdout=subprocess.PIPE)
     proc = subprocess.Popen(cmd, stdin=yes.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     yes.stdout.close()
