@@ -38,7 +38,12 @@ Strip2 ()
 
 CopySysprep ()
 {
-    SYSPREP_FILE=/opt/sysprep/$1
+    if [ -f /tmp/$1 ]; then
+      SYSPREP_FILE=/tmp/$1
+    else
+      SYSPREP_FILE=/opt/sysprep/$1
+    fi
+
     WINDIR=$(find /mnt -maxdepth 1 -type d -iname windows)
     WINSYSDIR=$(find $WINDIR -maxdepth 1 -type d -iname system32)
 

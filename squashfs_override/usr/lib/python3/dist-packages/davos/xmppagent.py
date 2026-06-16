@@ -301,6 +301,7 @@ class MUCBot(ClientXMPP):
         # Filled from davos kernel opts
         self.uuid=""
         self.mac=""
+        self.hostname=""
         self.relay_jid = to
         self.action_id = 0
         self.domain = ""

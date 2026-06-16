@@ -114,6 +114,10 @@ class davosManager(object):
         self.rpc = pkgServerProxy(self.server, self.fqdn)
 
         if self.action == "XMPP":
+            self.hostname = ""
+            if "davos_hostname" in self.kernel_params:
+                self.hostname = self.kernel_params["davos_hostname"]
+
             self.uuid = ""
             if "davos_uuid" in self.kernel_params:
                 self.uuid = self.kernel_params["davos_uuid"]
@@ -169,6 +173,11 @@ class davosManager(object):
         xmpp.domain = self.xmpp_domain
         xmpp.substitute_jid = "master_dma@%s"%self.xmpp_domain
 
+        xmpp.hostname = self.hostname
+        if self.hostname != "":
+            os.environ['HOSTNAME'] = self.hostname
+            runInShell('hostname ' + self.hostname)
+            runInShell('sed -i "s/debian/' + self.hostname + '/" /etc/hosts')
         # Setup the nfs mountpoints
         xmpp.mounts.load("masters", "/var/lib/pulse2/imaging/masters/", "/imaging_server/masters/", self.xmpp_server)
         xmpp.mounts.load("postinstalls", "/var/lib/pulse2/imaging/postinst/", "/opt", self.xmpp_server)
