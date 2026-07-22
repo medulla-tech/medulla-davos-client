@@ -272,7 +272,7 @@ class MUCBot(ClientXMPP):
         self.srv_addr = srv_addr
         self.ipv4 = self.srv_addr
         self.address = (self.srv_addr, self.srv_port)
-
+        self.keyAES32 = ""
         super().__init__(_jid, password)
 
         self.add_event_handler("connected", self.handle_connected)

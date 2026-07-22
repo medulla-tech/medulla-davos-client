@@ -40,7 +40,6 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
     # Can't launch non existing step
     if step >= count:
-
         step = -1
 
     status = "TODO"
@@ -75,7 +74,7 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
         logger.debug("Workflow done, rebooting the machine in 3 seconds")
         time.sleep(3)
-        # runInShell("reboot")
+        runInShell("reboot")
         return
 
     # Skip wrong steps
@@ -111,7 +110,6 @@ def action(objectxmpp, action, sessionid, data={}, message={}):
 
     # Stay on the current step,
     elif objectxmpp.workflow[step]["status"] == "WORKING":
-
         time.sleep(5)
 
     datasend = {

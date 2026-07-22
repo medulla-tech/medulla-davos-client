@@ -17,11 +17,18 @@ def action(objectxmpp, action, sessionid, data, message):
 
 
     if data["subaction"] == "getworkflow":
-        if "result" in data:
+        if "result" not in data or data["result"] == {}:
+            logger.error("Rebooting in 5 secs...")
+            time.sleep(5)
+            objectxmpp.runInShell("reboot")
+            return
 
+        if "keyAES32" in data:
+            objectxmpp.keyAES32 = data["keyAES32"]
+
+        if "result" in data:
             objectxmpp.send_log("Workflow for action %s received on machine %s"%(objectxmpp.action_id, objectxmpp.uuid), "info")
             if "workflow" in data["result"]:
-
                 objectxmpp.fullaction = data["result"]
                 objectxmpp.workflow = data["result"]["workflow"]
 

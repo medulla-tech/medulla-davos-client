@@ -247,6 +247,23 @@ MountSystem ()
   return 1
 }
 
+MountSystemLinux ()
+{
+  # Number of partitions
+  partnumber=($(grep '[a-z]\+[0-9]\+$' /proc/partitions | grep -v ram | grep -v loop | awk ' {print $4} '))
+  for num in `seq 1 ${partnumber}`; do
+    echo "partition" ${num}
+    # elif [ -d /mnt/bin ] && [ -d /mnt/etc ] && [ -d /mnt/var ] && [ -d /mnt/home ]; then
+    #   echo "*** INFO: Unix found on partition number ${num}"
+    #   return
+    # fi
+  done
+  # Got there ? Nothing found...
+  echo "*** ERROR: Unable to find a system disk"
+  umount /mnt >/dev/null 2>&1
+  return 1
+}
+
 #
 # Try to deploy Pulse2 agents on both Windows and Unix (ssh key only)
 #
@@ -472,7 +489,10 @@ CopyPulseAgent () {
 
 CopyAgent (){
     mkdir -p /mnt/Windows/Setup/Scripts/
-    if [ -z "$1" ]; then
+    if [ -f /tmp/Medulla-Agent-windows-FULL-latest.exe ]; then
+        cp /tmp/Medulla-Agent-windows-FULL-latest.exe /mnt/Windows/Setup/Scripts/
+        echo "Medulla-Agent-windows-FULL-latest.exe will be installed"
+    elif [ -z "$1" ]; then
         cp /opt/winutils/Medulla-Agent-windows-FULL-latest.exe /mnt/Windows/Setup/Scripts/
         echo "Medulla-Agent-windows-FULL-latest.exe will be installed"
     else
@@ -480,6 +500,7 @@ CopyAgent (){
         echo "$1 will be installed"
     fi
 }
+
 
 CopyRunAtOnce (){
     mkdir -p /mnt/Windows/Setup/Scripts/
