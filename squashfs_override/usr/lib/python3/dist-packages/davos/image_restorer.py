@@ -96,15 +96,26 @@ class imageRestorer(object):
         # Set Fake Parclone mode
         os.environ['CLMODE'] = 'RESTORE_IMAGE'
 
-        # Find out the device to restore to
-        if os.path.exists('/dev/nvme0n1'):
-            self.device = 'nvme0n1'
-        elif os.path.exists('/dev/sda'):
-            self.device = 'sda'
-        elif os.path.exists('/dev/hda'):
-            self.device = 'hda'
-        elif os.path.exists('/dev/vda'):
-            self.device = 'vda'
+        # Try to get the diskname with generic method
+        self.device = self.manager.get_disk_name()
+
+        # If no success, try the old method to detect it
+        if self.device == "":
+            # Find out the device to restore to
+            if os.path.exists('/dev/nvme0n1'):
+                self.device = 'nvme0n1'
+            elif os.path.exists('/dev/sda'):
+                self.device = 'sda'
+            elif os.path.exists('/dev/hda'):
+                self.device = 'hda'
+            elif os.path.exists('/dev/vda'):
+                self.device = 'vda'
+
+        # if still nothing, we can't go further
+        if self.device == "":
+            self.logger.error("No suitable disk found to restore the image")
+            time.sleep(15)
+            return
 
         # Start the image restore
         if self.mode == 'multicast':

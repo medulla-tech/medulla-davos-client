@@ -172,3 +172,16 @@ class Mount:
         Args:
             self (Mount): Instance of Mount Object"""
         self.unmount()
+
+def get_disk_name(self)->str:
+    """Get the disk name with a generic method.
+
+    Returns:
+        str the name of the disk found"""
+
+    devices = json.loads(subprocess.check_output(['lsblk', '--json', '--nodeps', '--output', 'NAME,TYPE,RM,RO']))['blockdevices']
+    disks = [device['name'] for device in devices if device['type'] == 'disk' and not device['rm'] and not device['ro']]
+    if not disks:
+        return ""
+    device = disks[0]
+    return device

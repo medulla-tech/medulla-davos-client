@@ -79,6 +79,10 @@ async def action_mastering(objectxmpp, data):
 
     master_path, master_uuid = configure_master(objectxmpp)
     device = get_device()
+    if device == "":
+        objectxmpp.send_log("No writable non-removable disk found to deploy the image", "error")
+        call_next_step(objectxmpp, data)
+        return
     yes, process = master_get_process(objectxmpp, master_uuid, device)
 
     while True:
@@ -200,15 +204,18 @@ def configure_deploy(master_path, objectxmpp):
 
 
 def get_device():
-    # Find out the device to save
-    if os.path.exists('/dev/nvme0n1'):
-        device = 'nvme0n1'
-    elif os.path.exists('/dev/sda'):
-        device = 'sda'
-    elif os.path.exists('/dev/hda'):
-        device = 'hda'
-    elif os.path.exists('/dev/vda'):
-        device = 'vda'
+    device = get_disk_name()
+
+    if device == "":
+        # Find out the device to save
+        if os.path.exists('/dev/nvme0n1'):
+            device = 'nvme0n1'
+        elif os.path.exists('/dev/sda'):
+            device = 'sda'
+        elif os.path.exists('/dev/hda'):
+            device = 'hda'
+        elif os.path.exists('/dev/vda'):
+            device = 'vda'
 
     return device
 
@@ -251,6 +258,11 @@ async def action_deploy(objectxmpp, data):
 
     master_uuid = os.path.basename(master_path)
     device = get_device()
+    if device == "":
+        objectxmpp.send_log("No writable non-removable disk found to deploy the image", "error")
+        call_next_step(objectxmpp, data)
+        return
+
     # Set Fake Parclone mode
     os.environ['CLMODE'] = 'RESTORE_IMAGE'
     # Find out the device to restore to

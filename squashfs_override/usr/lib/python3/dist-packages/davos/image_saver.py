@@ -44,14 +44,22 @@ class imageSaver(object):
         os.environ['CLMODE'] = 'SAVE_IMAGE'
 
         # Find out the device to save
-        if os.path.exists('/dev/nvme0n1'):
-            self.device = 'nvme0n1'
-        elif os.path.exists('/dev/sda'):
-            self.device = 'sda'
-        elif os.path.exists('/dev/hda'):
-            self.device = 'hda'
-        elif os.path.exists('/dev/vda'):
-            self.device = 'vda'
+        self.device = self.manager.get_disk_name()
+
+        if self.device == "":
+            if os.path.exists('/dev/nvme0n1'):
+                self.device = 'nvme0n1'
+            elif os.path.exists('/dev/sda'):
+                self.device = 'sda'
+            elif os.path.exists('/dev/hda'):
+                self.device = 'hda'
+            elif os.path.exists('/dev/vda'):
+                self.device = 'vda'
+
+        if self.device == "":
+            self.logger.error("No suitable disk found to save the image")
+            time.sleep(15)
+            return
 
         # Start the image saver
         error_code = subprocess.call('yes 2>/dev/null|/bin/bash -c "/usr/sbin/ocs-sr %s savedisk %s %s > >(exec cat | tee -a /var/log/davos_saver.log) 2>&1"' % (self.manager.clonezilla_params['clonezilla_saver_params'], self.image_uuid, self.device), shell=True)

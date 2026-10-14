@@ -31,7 +31,7 @@ from davos.utils import *
 import json
 import re
 import base64
-
+import json
 
 class davosManager(object):
 
@@ -369,7 +369,6 @@ class davosManager(object):
                 self.logger.error('Cannot mount %s Share', certs_dir)
                 self.logger.error('Output: %s', e)
 
-
         # Logs share
         logs_dir = '/mnt/logs'
         self.nfs_share_logs = '/var/lib/pulse2/imaging/logs/'
@@ -383,6 +382,19 @@ class davosManager(object):
                 self.logger.error('Cannot mount %s Share', logs_dir)
                 self.logger.error('Output: %s', e)
 
+    def get_disk_name(self)->str:
+        """Get the disk name with a generic method.
+
+        Returns:
+            str the name of the disk found"""
+
+        devices = json.loads(subprocess.check_output(['lsblk', '--json', '--nodeps', '--output', 'NAME,TYPE,RM,RO']))['blockdevices']
+        disks = [device['name'] for device in devices if device['type'] == 'disk' and not device['rm'] and not device['ro']]
+        if not disks:
+            self.logger.error('No writable non-removable disk found to save')
+            return ""
+        device = disks[0]
+        return device
 
     def createPartimagSymlink(self):
         try:
