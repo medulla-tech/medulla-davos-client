@@ -2,7 +2,7 @@ name: Build Debian (Kestra)
 
 on:
   push:
-    branches: [integration, main]
+    branches: [integration, master]
   workflow_dispatch:
     inputs:
       branch:
@@ -23,7 +23,7 @@ jobs:
       KESTRA_USER: ${{ secrets.KESTRA_USER }}
       KESTRA_PASSWORD: ${{ secrets.KESTRA_PASSWORD }}
       FLOW: medulla-davos-client-build-debian
-      BRANCH: ${{ inputs.branch || (github.ref_name == 'main' && 'master' || github.ref_name) }}
+      BRANCH: ${{ inputs.branch || github.ref_name }}
       NAMESPACE: medulla
       DISTRIBUTION: trixie
     steps:
