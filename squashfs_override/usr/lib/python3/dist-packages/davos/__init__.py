@@ -331,9 +331,43 @@ class davosManager(object):
         self.clonezilla_params = self.rpc.imaging_api.getClonezillaParamsForTarget(self.host_uuid)
 
 
+    def setNfsClientIdentifier(self):
+        """
+        Give this machine a unique NFSv4 client identifier before the first mount.
+
+        NFS shares are mounted before the hostname is set, so every DavOS client
+        would present the same identity ("Linux NFSv4.2 localhost.localdomain").
+        The NFS server then sees one client rebooting endlessly: clients steal
+        each other's lease and keep renegotiating their session, which caps the
+        cumulative restore throughput when several machines are deployed.
+        See Documentation/filesystems/nfs/client-identifier.rst in the kernel.
+        """
+        ident = getattr(self, 'mac', None)
+        if not ident:
+            try:
+                ident = self.getMachineUuid()
+            except (IOError, OSError):
+                ident = None
+        if not ident:
+            import uuid
+            ident = str(uuid.uuid4())
+        ident = 'davos-' + re.sub(r'[^0-9A-Za-z.-]', '', ident).lower()
+
+        self.runInShell('modprobe nfs')
+        path = '/sys/fs/nfs/net/nfs_client/identifier'
+        try:
+            with open(path, 'w') as f:
+                f.write(ident)
+            self.logger.info('NFSv4 client identifier set to %s', ident)
+        except (IOError, OSError) as e:
+            self.logger.warning('Cannot set NFSv4 client identifier (%s): %s', path, e)
+
     def mountNFSShares(self):
         # Server address
         server = self.nfs_server
+
+        # Unique NFSv4 identity per machine (must be done before any NFS mount)
+        self.setNfsClientIdentifier()
 
         # Masters Share
         local_dir = '/imaging_server/masters/'
