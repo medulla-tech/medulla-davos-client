@@ -117,6 +117,9 @@ class imageRestorer(object):
             time.sleep(15)
             return
 
+        # Optional background diagnostic (davos-diag), see diagnosticEnabled()
+        self.startDiagnostic()
+
         # Start the image restore
         if self.mode == 'multicast':
             if self.manager.clonezilla_params['clonezilla_restorer_params'] is False:
@@ -141,12 +144,98 @@ class imageRestorer(object):
             self.logger.warning('An error was encountered while restoring image, check davos_restorer.log for more details inside imaginglogs/debug_imaging/ samba share.')
             time.sleep(15)
 
+        # Collect logs and final report when the diagnostic is enabled
+        self.finishDiagnostic()
+
         # RUN POST INST STEP
         self.run_postimaging()
 
 
         # Run post-imaging convergence
         # self.apply_convergence()
+
+    DIAG_SCRIPT = '/usr/sbin/davos-diag'
+    DIAG_ENABLE_FILE = '/mnt/logs/davos-diag.enable'
+    DIAG_FINISH_WAIT = 20  # seconds; the restore never waits longer for the diagnostic
+
+    # The diagnostic must never block nor break a restore: every step is
+    # bounded by a timeout, runs at the lowest CPU and I/O priority, and any
+    # error is logged and ignored.
+
+    def _diagRead(self, args, limit=3):
+        """Run a small command on the logs share with a hard time limit."""
+        try:
+            return subprocess.run(['timeout', '-k', '2', str(limit)] + args,
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                  timeout=limit + 5)
+        except Exception:
+            return None
+
+    def diagnosticEnabled(self):
+        """
+        The diagnostic runs only when asked for: davos_diag=1 on the kernel
+        command line, or the file davos-diag.enable in the imaging logs share on
+        the server. Reports are written to <logs share>/davos-diag/.
+        """
+        if not os.path.exists(self.DIAG_SCRIPT):
+            return False
+        if str(self.manager.kernel_params.get('davos_diag', '')).lower() in ('1', 'yes', 'true'):
+            return True
+        r = self._diagRead(['test', '-e', self.DIAG_ENABLE_FILE])
+        return r is not None and r.returncode == 0
+
+    def diagnosticOptions(self):
+        """Read "-d SECONDS -i SECONDS" from davos-diag.enable (numbers only)."""
+        opts = []
+        r = self._diagRead(['cat', self.DIAG_ENABLE_FILE])
+        if r is None or r.returncode != 0:
+            return opts
+        words = r.stdout.decode('utf-8', 'ignore').split()
+        for flag, value in zip(words, words[1:]):
+            if flag in ('-d', '-i') and value.isdigit() and 0 < int(value) <= 3600:
+                opts += [flag, value]
+        return opts
+
+    def _diagCommand(self, args, limit):
+        """davos-diag wrapped in timeout, nice and ionice when available."""
+        cmd = []
+        if shutil.which('timeout'):
+            cmd += ['timeout', '-k', '10', str(limit)]
+        if shutil.which('nice'):
+            cmd += ['nice', '-n', '19']
+        if shutil.which('ionice'):
+            cmd += ['ionice', '-c', '3']
+        return cmd + ['/bin/bash', self.DIAG_SCRIPT] + args
+
+    def startDiagnostic(self):
+        """Start davos-diag in the background; returns immediately."""
+        self.diag_enabled = False
+        try:
+            if not self.diagnosticEnabled():
+                return
+            cmd = self._diagCommand(['-w'] + self.diagnosticOptions(), 1800)
+            subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+            self.diag_enabled = True
+            self.logger.info('Diagnostic started in background: %s', ' '.join(cmd))
+        except Exception as e:
+            self.logger.warning('Diagnostic not started (ignored): %s', e)
+
+    def finishDiagnostic(self):
+        """Collect logs in the background; wait at most DIAG_FINISH_WAIT seconds."""
+        if not getattr(self, 'diag_enabled', False):
+            return
+        try:
+            p = subprocess.Popen(self._diagCommand(['-L'], 120), stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 start_new_session=True)
+            try:
+                rc = p.wait(timeout=self.DIAG_FINISH_WAIT)
+                self.logger.info('Diagnostic log collection finished (exit code %s)', rc)
+            except subprocess.TimeoutExpired:
+                self.logger.info('Diagnostic log collection still running, not waiting for it')
+        except Exception as e:
+            self.logger.warning('Diagnostic log collection failed (ignored): %s', e)
 
     def setlibpostinstVars(self):
         # Setting some env vars needed by libpostinst
