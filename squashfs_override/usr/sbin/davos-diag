@@ -1,0 +1,313 @@
+#!/bin/bash
+# =============================================================================
+# davos-diag.sh - Diagnostic complet d'un poste sous DavOS
+#
+# A lancer sur le poste (en SSH, root) PENDANT une restauration d'image.
+# Il collecte et analyse : materiel, lien reseau, NFS (identite, sessions,
+# retransmissions, latence), processus de restauration (pigz, partclone),
+# processeur, disque, messages noyau et logs DavOS / Clonezilla / partclone.
+#
+# Usage :  bash /mnt/logs/davos-diag.sh [-d DUREE_S] [-i INTERVALLE_S] [-w] [-L]
+#            -d  duree d'echantillonnage en secondes (defaut 60)
+#            -i  intervalle entre deux mesures (defaut 5)
+#            -w  attendre le demarrage de partclone (15 min maximum) avant de mesurer
+#            -L  logs seulement : pas de mesures (utilise par DavOS en fin de restauration)
+#
+# Lancement automatique par DavOS (si le correctif davos-diag est installe) :
+#   sur le serveur, creer /var/lib/pulse2/imaging/logs/davos-diag.enable
+#   (contenu optionnel : "-d 120 -i 5"), ou ajouter davos_diag=1 aux parametres noyau.
+#
+# Resultats : /mnt/logs/davos-diag/<poste>-<date>/
+#   rapport.txt      synthese avec verdicts [OK] [ATTENTION] [PROBLEME]
+#   echantillons.csv une ligne par mesure
+#   brut/            sorties completes des commandes et copies des logs
+# Sur le serveur Medulla : /var/lib/pulse2/imaging/logs/davos-diag/
+# =============================================================================
+
+DUREE=60; INTERVALLE=5; ATTENDRE=0; LOGS_ONLY=0
+while getopts "d:i:wLh" o; do
+  case $o in
+    d) DUREE=$OPTARG ;; i) INTERVALLE=$OPTARG ;; w) ATTENDRE=1 ;; L) LOGS_ONLY=1 ;;
+    *) sed -n '2,20p' "$0"; exit 0 ;;
+  esac
+done
+[[ $EUID -eq 0 ]] || { echo "A lancer en root."; exit 1; }
+# Ne jamais gener la restauration : priorite processeur et disque minimales
+renice -n 19 -p $$ >/dev/null 2>&1; ionice -c 3 -p $$ >/dev/null 2>&1
+# Commandes qui touchent le partage NFS : duree bornee
+t() { local d=$1; shift; if command -v timeout >/dev/null; then timeout -k 2 "$d" "$@"; else "$@"; fi; }
+[[ $DUREE =~ ^[0-9]+$ && $INTERVALLE =~ ^[1-9][0-9]*$ ]] || { echo "Duree ou intervalle invalide."; exit 1; }
+if (( ATTENDRE == 1 )); then
+  for ((t=0; t<900; t+=5)); do pgrep partclone >/dev/null && break; sleep 5; done
+  sleep 10   # laisser le debit se stabiliser
+fi
+
+HOST=$(hostname)
+BASE=/mnt/logs; [[ -d $BASE && -w $BASE ]] || BASE=/tmp
+OUTDIR=$BASE/davos-diag/$HOST-$(date +%Y%m%d-%H%M%S)$( (( LOGS_ONLY )) && echo -fin )
+RAW=$OUTDIR/brut; mkdir -p "$RAW"
+REPORT=$OUTDIR/rapport.txt
+NB_OK=0; NB_ATT=0; NB_KO=0; SYNTHESE=()
+
+say()  { echo "$*" | tee -a "$REPORT"; }
+titre(){ say ""; say "=== $* ==="; }
+ok()   { NB_OK=$((NB_OK+1)); say "[OK]        $*"; }
+att()  { NB_ATT=$((NB_ATT+1)); say "[ATTENTION] $*"; SYNTHESE+=("[ATTENTION] $*"); }
+ko()   { NB_KO=$((NB_KO+1)); say "[PROBLEME]  $*"; SYNTHESE+=("[PROBLEME]  $*"); }
+info() { say "[INFO]      $*"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+raw()  { local f=$1; shift; { echo "# $*"; "$@"; } > "$RAW/$f" 2>&1; }
+
+say "Diagnostic DavOS - poste $HOST - $(date '+%d/%m/%Y %H:%M:%S')"
+(( LOGS_ONLY )) && say "Mode logs seulement (fin de restauration)" || say "Echantillonnage : ${DUREE} s, toutes les ${INTERVALLE} s"
+
+# --- Collecte brute ----------------------------------------------------------
+raw cmdline.txt cat /proc/cmdline
+raw dmesg.txt dmesg
+raw ip.txt ip -s addr
+raw route.txt ip route
+raw mounts.txt cat /proc/mounts
+raw mountstats.txt cat /proc/self/mountstats
+raw lsblk.txt lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL,TRAN,ROTA,MOUNTPOINT
+raw lscpu.txt lscpu
+raw meminfo.txt cat /proc/meminfo
+raw ps.txt ps -eo pid,ppid,pcpu,pmem,etime,args --sort=-pcpu
+have dmidecode && raw dmidecode.txt dmidecode -t system -t bios -t baseboard
+have lspci && raw lspci.txt lspci -nnk
+have nfsstat && raw nfsstat-debut.txt nfsstat -c
+
+# --- Contexte de demarrage ---------------------------------------------------
+titre "Demarrage"
+CMDLINE=$(cat /proc/cmdline)
+for p in fetch davos_action mac tftp_ip nfs_server; do
+  v=$(tr ' ' '\n' <<<"$CMDLINE" | grep -m1 "^$p=" | cut -d= -f2-)
+  [[ -n $v ]] && info "$p = $v"
+done
+info "Noyau : $(uname -r) - en marche depuis $(awk '{printf "%d min", $1/60}' /proc/uptime)"
+BOOTNAME=$(dmesg | grep -m1 -o 'Hostname set to <[^>]*>' | sed 's/.*<\(.*\)>/\1/')
+info "Nom au demarrage : ${BOOTNAME:-inconnu} - nom actuel : $HOST"
+
+# --- Materiel ----------------------------------------------------------------
+titre "Materiel"
+if have dmidecode; then
+  info "Modele : $(dmidecode -s system-manufacturer 2>/dev/null) $(dmidecode -s system-product-name 2>/dev/null) - BIOS $(dmidecode -s bios-version 2>/dev/null)"
+fi
+info "Processeur : $(lscpu | sed -n 's/^Model name:[[:space:]]*//p') - $(nproc) coeurs"
+GOV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null)
+DRV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver 2>/dev/null)
+[[ -n $GOV ]] && info "Gestion de frequence : $DRV / $GOV"
+MEMAV=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
+MEMT=$(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo)
+info "Memoire : ${MEMAV} Mo disponibles sur ${MEMT} Mo"
+(( MEMAV < 512 )) && att "Memoire disponible faible (${MEMAV} Mo)"
+
+# --- Reseau ------------------------------------------------------------------
+titre "Reseau"
+MNT=$(awk '$3 ~ /^nfs/ && $2 ~ "^/imaging_server/masters" {print $1" "$2" "$3; exit}' /proc/mounts)
+SRV=${MNT%%:*}; MNTPT=$(awk '{print $2}' <<<"$MNT"); FSTYPE=$(awk '{print $3}' <<<"$MNT")
+[[ -z $SRV ]] && SRV=$(tr ' ' '\n' <<<"$CMDLINE" | grep -m1 '^tftp_ip=' | cut -d= -f2)
+IF=$( [[ -n $SRV ]] && ip route get "$SRV" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}' )
+[[ -z $IF ]] && IF=$(ip route | awk '/^default/{print $5; exit}')
+info "Serveur : ${SRV:-inconnu} - interface : ${IF:-inconnue}"
+SPEED=$(cat /sys/class/net/$IF/speed 2>/dev/null)
+DUPLEX=$(cat /sys/class/net/$IF/duplex 2>/dev/null)
+MTU=$(cat /sys/class/net/$IF/mtu 2>/dev/null)
+if have ethtool; then
+  raw ethtool.txt ethtool "$IF"; raw ethtool-i.txt ethtool -i "$IF"; raw ethtool-S.txt ethtool -S "$IF"
+  info "Pilote : $(ethtool -i "$IF" 2>/dev/null | awk -F': ' '/^driver/{d=$2} /^firmware-version/{f=$2} END{print d" - firmware "f}')"
+fi
+if [[ -z $SPEED || $SPEED -le 0 ]]; then att "Vitesse du lien inconnue"
+elif (( SPEED < 1000 )); then ko "Lien negocie a ${SPEED} Mbit/s (cable, prise, brassage ou port de switch a verifier)"
+else ok "Lien a ${SPEED} Mbit/s, duplex ${DUPLEX}"; fi
+[[ $DUPLEX == half ]] && ko "Lien en half duplex"
+info "MTU : ${MTU}"
+LINKUP=$(dmesg | grep -i "$IF.*link is up\|NIC Link is Up" | tail -1)
+[[ -n $LINKUP ]] && info "Montee du lien : $(sed 's/^\[ *//;s/\].*NIC Link is Up/ s :/' <<<"$LINKUP")"
+if have ethtool; then
+  ERRS=$(ethtool -S "$IF" 2>/dev/null | grep -iE 'err|drop|miss|crc|fifo|collision|timeout' | awk -F: '$2+0>0{gsub(/^ +/,"",$1); printf "%s=%d ", $1, $2}')
+  [[ -n $ERRS ]] && att "Compteurs d'erreurs non nuls sur la carte : $ERRS" || ok "Aucune erreur sur la carte reseau"
+fi
+if [[ -n $SRV ]]; then
+  PING=$(ping -c 5 -i 0.2 -W 1 "$SRV" 2>/dev/null | awk -F'/' '/rtt|round-trip/{print $5}')
+  if [[ -z $PING ]]; then att "Le serveur ne repond pas au ping (peut etre filtre)"
+  else info "Latence vers le serveur : ${PING} ms"
+       awk -v p="$PING" 'BEGIN{exit !(p>5)}' && att "Latence elevee vers le serveur (${PING} ms)"; fi
+fi
+
+# --- NFS ---------------------------------------------------------------------
+titre "NFS"
+if [[ -z $MNT ]]; then ko "Partage des images (/imaging_server/masters) non monte"; else
+  OPTS=$(awk -v m="$MNTPT" '$2==m{print $4; exit}' /proc/mounts)
+  VERS=$(grep -o 'vers=[0-9.]*' <<<"$OPTS" | cut -d= -f2)
+  RSIZE=$(grep -o 'rsize=[0-9]*' <<<"$OPTS" | cut -d= -f2)
+  PROTO=$(grep -o 'proto=[a-z0-9]*' <<<"$OPTS" | cut -d= -f2)
+  info "Montage : $FSTYPE vers=$VERS proto=$PROTO rsize=$RSIZE"
+  [[ -n $RSIZE ]] && (( RSIZE < 262144 )) && att "Taille de lecture NFS faible (rsize=$RSIZE)"
+  BDI=$(t 5 mountpoint -d "$MNTPT" 2>/dev/null)
+  RA=$(cat /sys/class/bdi/$BDI/read_ahead_kb 2>/dev/null)
+  [[ -n $RA ]] && info "Lecture anticipee NFS : ${RA} Ko"
+  ID=$(cat /sys/fs/nfs/net/nfs_client/identifier 2>/dev/null)
+  if [[ ${VERS:-0} != 3* && ${VERS:-0} != 2* && -n $VERS ]]; then
+    if [[ $ID == davos-* ]]; then ok "Identite NFSv4 unique : $ID"
+    else ko "Identite NFSv4 non definie (${ID:-vide}) : le poste se presente comme '${BOOTNAME:-?}', commun a tous les postes DavOS (collision possible)"; fi
+    [[ $VERS == 4.2 ]] && info "NFSv4.2 : l'operation READ_PLUS peut etre utilisee (plus lente sur certains serveurs)"
+  else
+    info "NFSv$VERS : pas d'identite de client ni de session (pas de collision possible)"
+  fi
+fi
+
+# --- Restauration en cours ---------------------------------------------------
+titre "Restauration"
+OCS=$(pgrep -af 'ocs-sr' | grep -v pgrep | head -1)
+PCL=$(pgrep -a 'partclone' | head -1)
+if [[ -z $OCS && -z $PCL ]] && (( LOGS_ONLY )); then
+  RESTO=0; info "Restauration terminee"
+elif [[ -z $OCS && -z $PCL ]]; then
+  att "Aucune restauration en cours : les mesures de debit ne seront pas significatives"
+  RESTO=0
+else
+  RESTO=1; ok "Restauration en cours"
+  [[ -n $OCS ]] && info "ocs-sr : $(cut -d' ' -f2- <<<"$OCS" | cut -c1-200)"
+  [[ -n $PCL ]] && info "partclone : $(cut -d' ' -f2- <<<"$PCL" | cut -c1-200)"
+  IMG=$(grep -oE '(restoredisk|restoreparts|multicast_restoredisk) [^ ]+' <<<"$OCS" | awk '{print $2}')
+  if [[ -n $IMG ]] && t 5 test -d /home/partimag/$IMG; then
+    FMT=$(t 10 ls /home/partimag/$IMG 2>/dev/null | grep -oE 'ptcl-img\.[a-z0-9]+' | sort -u | sed 's/ptcl-img\.//' | paste -sd, -)
+    TAILLE=$(t 15 du -sh /home/partimag/$IMG 2>/dev/null | cut -f1)
+    info "Image $IMG : $TAILLE, compression : ${FMT:-inconnue}"
+    INFOCMD=$(t 5 cat /home/partimag/$IMG/Info-saved-by-cmd.txt 2>/dev/null | cut -c1-160); [[ -n $INFOCMD ]] && info "Capturee avec : $INFOCMD"
+    [[ $FMT == *gz* ]] && info "Image gzip : decompression pigz sur un seul coeur (zstd -z9p est plus rapide a decompresser)"
+  fi
+fi
+
+# --- Disque cible ------------------------------------------------------------
+titre "Disque"
+DISK=$(lsblk -dno NAME,TYPE | awk '$2=="disk" && $1!~/^(loop|zram|sr|ram)/{print $1; exit}')
+info "Disque cible : /dev/$DISK - $(lsblk -dno MODEL,SIZE /dev/$DISK 2>/dev/null | xargs)"
+if have nvme && [[ $DISK == nvme* ]]; then
+  raw nvme-smart.txt t 10 nvme smart-log /dev/$DISK
+  CW=$(awk -F: '/critical_warning/{gsub(/ /,"",$2); print $2}' "$RAW/nvme-smart.txt")
+  TEMP=$(awk -F: '/^temperature/{print $2+0}' "$RAW/nvme-smart.txt")
+  USED=$(awk -F: '/percentage_used/{gsub(/[ %]/,"",$2); print $2}' "$RAW/nvme-smart.txt")
+  [[ -n $CW && $CW != 0 ]] && ko "Le SSD NVMe signale un avertissement critique ($CW)"
+  [[ -n $TEMP ]] && info "Temperature NVMe : ${TEMP} C - usure : ${USED}%"
+  [[ -n $TEMP && $TEMP -ge 70 ]] && att "SSD NVMe chaud (${TEMP} C) : risque de bridage thermique"
+elif have smartctl; then
+  raw smart.txt t 20 smartctl -a /dev/$DISK
+fi
+DERR=$(dmesg | grep -iE 'nvme.*(timeout|abort|reset|error)|ata[0-9].*(error|failed)|I/O error|blk_update_request' | wc -l)
+(( DERR > 0 )) && ko "$DERR erreur(s) disque dans les messages noyau (voir brut/dmesg.txt)" || ok "Aucune erreur disque dans les messages noyau"
+
+# --- Echantillonnage ---------------------------------------------------------
+if (( LOGS_ONLY == 0 )); then
+titre "Mesures pendant ${DUREE} s"
+HZ=$(getconf CLK_TCK)
+exch() { nfsstat -c 2>/dev/null | awk '/exchange_id/{for(i=1;i<=NF;i++) if($i=="exchange_id") k=i; getline; print $(2*k-1)+0; exit}'; }
+# READ : ops transmissions timeouts octets_env octets_recus file_ms rtt_ms exec_ms
+nfsread() { awk -v m="$MNTPT" '$1=="device" {on=($5==m)} on && $1=="READ:" {print $2,$3,$4,$7,$8,$9; exit}' /proc/self/mountstats; }
+xprtc()   { awk -v m="$MNTPT" '$1=="device" {on=($5==m)} on && $1=="xprt:" {print $5; exit}' /proc/self/mountstats; }
+cpu()     { awk '/^cpu /{print $2+$3+$4+$7+$8+$9, $5, $6}' /proc/stat; }  # occupe idle iowait
+proc_ticks() { for p in /proc/[0-9]*; do read -r c t < <(awk '{gsub(/[()]/,"",$2); print $2, $14+$15}' $p/stat 2>/dev/null) || continue
+                 case $c in pigz|unpigz|gzip|zstd|zstdmt) D=$((D+t));; partclone*) P=$((P+t));; esac; done; echo "${D:-0} ${P:-0}"; D=0; P=0; }
+disk_w()  { awk '{print $7}' /sys/block/$DISK/stat 2>/dev/null; }
+rx()      { cat /sys/class/net/$IF/statistics/rx_bytes 2>/dev/null; }
+
+CSV=$OUTDIR/echantillons.csv
+echo "heure;reseau_mbits;disque_mos;cpu_occupe_pct;iowait_pct;decompression_pct_coeur;partclone_pct_coeur;nfs_lectures;nfs_rtt_ms;exchange_id" > "$CSV"
+E0=$(exch); X0=$(xprtc); read -r R_OPS0 R_TR0 R_TO0 _ R_RTT0 R_EX0 <<<"$(nfsread)"
+read -r C_B C_I C_W <<<"$(cpu)"; read -r T_D T_P <<<"$(proc_ticks)"; N0=$(rx); W0=$(disk_w)
+S_RX=0; S_DK=0; S_IOW=0; S_BUSY=0; S_DEC=0; S_PCL=0; MAX_DEC=0; N=0
+FIN=$((SECONDS+DUREE))
+while (( SECONDS < FIN )); do
+  sleep "$INTERVALLE"
+  read -r c_b c_i c_w <<<"$(cpu)"; read -r t_d t_p <<<"$(proc_ticks)"; n=$(rx); w=$(disk_w)
+  read -r r_ops _ _ _ r_rtt _ <<<"$(nfsread)"; e=$(exch)
+  dt=$(( (c_b-C_B)+(c_i-C_I)+(c_w-C_W) )); (( dt == 0 )) && dt=1
+  MB=$(( (n-N0)*8/INTERVALLE/1000000 )); DK=$(( (w-W0)*512/INTERVALLE/1000000 ))
+  BUSY=$(( (c_b-C_B)*100/dt )); IOW=$(( (c_w-C_W)*100/dt ))
+  DEC=$(( (t_d-T_D)*100/HZ/INTERVALLE )); PC=$(( (t_p-T_P)*100/HZ/INTERVALLE ))
+  dops=$(( ${r_ops:-0}-${R_OPS_P:-${R_OPS0:-0}} )); drtt=$(( ${r_rtt:-0}-${R_RTT_P:-${R_RTT0:-0}} ))
+  RTT=$( (( dops > 0 )) && echo $((drtt/dops)) || echo "-" )
+  echo "$(date +%H:%M:%S);$MB;$DK;$BUSY;$IOW;$DEC;$PC;$dops;$RTT;${e:-}" >> "$CSV"
+  printf "  %s  reseau %5s Mbit/s | disque %4s Mo/s | CPU %3s%% (iowait %2s%%) | decompression %3s%% | partclone %3s%% | NFS rtt %s ms\n" \
+    "$(date +%H:%M:%S)" "$MB" "$DK" "$BUSY" "$IOW" "$DEC" "$PC" "$RTT" | tee -a "$REPORT"
+  S_RX=$((S_RX+MB)); S_DK=$((S_DK+DK)); S_IOW=$((S_IOW+IOW)); S_BUSY=$((S_BUSY+BUSY)); S_DEC=$((S_DEC+DEC)); S_PCL=$((S_PCL+PC)); N=$((N+1))
+  (( DEC > MAX_DEC )) && MAX_DEC=$DEC
+  C_B=$c_b; C_I=$c_i; C_W=$c_w; T_D=$t_d; T_P=$t_p; N0=$n; W0=$w; R_OPS_P=$r_ops; R_RTT_P=$r_rtt
+done
+E1=$(exch); X1=$(xprtc); read -r R_OPS1 R_TR1 R_TO1 _ R_RTT1 R_EX1 <<<"$(nfsread)"
+have nfsstat && raw nfsstat-fin.txt nfsstat -c
+(( N == 0 )) && N=1
+A_RX=$((S_RX/N)); A_DK=$((S_DK/N)); A_IOW=$((S_IOW/N)); A_BUSY=$((S_BUSY/N)); A_DEC=$((S_DEC/N)); A_PCL=$((S_PCL/N))
+
+titre "Analyse des mesures"
+info "Moyennes : reseau ${A_RX} Mbit/s, disque ${A_DK} Mo/s, CPU ${A_BUSY}% (iowait ${A_IOW}%), decompression ${A_DEC}% d'un coeur, partclone ${A_PCL}% d'un coeur"
+
+# Sessions NFS (collision)
+if [[ -n $E0 && -n $E1 ]]; then
+  if (( E1 > E0 )); then ko "Sessions NFSv4 renegociees pendant la mesure ($E0 -> $E1) : collision d'identite entre postes"
+  else ok "Sessions NFS stables (exchange_id = $E1)"; fi
+fi
+# Retransmissions, timeouts, reconnexions
+if [[ -n $R_OPS1 && -n $R_OPS0 ]]; then
+  DOPS=$((R_OPS1-R_OPS0)); RETR=$(( (R_TR1-R_OPS1)-(R_TR0-R_OPS0) )); TOUT=$((R_TO1-R_TO0))
+  (( DOPS > 0 )) && AVG_RTT=$(( (R_RTT1-R_RTT0)/DOPS )) && AVG_EX=$(( (R_EX1-R_EX0)/DOPS ))
+  info "Lectures NFS : $DOPS, RTT moyen ${AVG_RTT:-?} ms, temps total moyen ${AVG_EX:-?} ms"
+  (( RETR > 0 )) && att "$RETR retransmission(s) NFS pendant la mesure (pertes reseau ou serveur sature)"
+  (( TOUT > 0 )) && ko "$TOUT expiration(s) NFS majeure(s) : le serveur ne repond plus par moments"
+  [[ -n $AVG_RTT ]] && (( AVG_RTT > 50 )) && att "Lectures NFS lentes (RTT moyen ${AVG_RTT} ms) : serveur, stockage ou reseau charges"
+  (( RETR == 0 && TOUT == 0 )) && ok "Aucune retransmission ni expiration NFS"
+fi
+[[ -n $X0 && -n $X1 ]] && (( X1 > X0 )) && att "Connexion TCP NFS retablie $((X1-X0)) fois pendant la mesure"
+[[ -n $X1 ]] && (( X1 > 1 )) && info "Connexions TCP NFS depuis le montage : $X1"
+
+# Goulot d'etranglement
+if (( RESTO == 1 )); then
+  LIEN=${SPEED:-1000}; (( LIEN <= 0 )) && LIEN=1000
+  PCT=$((A_RX*100/LIEN))
+  if (( PCT >= 80 )); then ok "Lien utilise a ${PCT}% : le poste recoit au maximum de son lien"
+  elif (( MAX_DEC >= 90 )); then ko "Goulot : decompression (${MAX_DEC}% d'un coeur) - le processeur ne decompresse pas plus vite. Piste : images zstd (-z9p)"
+  elif (( A_PCL >= 90 )); then ko "Goulot : partclone (${A_PCL}% d'un coeur)"
+  elif (( A_IOW >= 20 )); then ko "Goulot : ecriture disque (iowait ${A_IOW}%)"
+  else ko "Goulot : reseau / NFS / serveur - le poste attend les donnees (lien a ${PCT}%, CPU occupe a ${A_BUSY}%). Voir les verdicts NFS ci-dessus"; fi
+fi
+
+fi  # fin des mesures
+
+# --- Messages noyau ----------------------------------------------------------
+titre "Messages noyau"
+grep -qi 'Detected Hardware Unit Hang' "$RAW/dmesg.txt" && ko "La carte reseau a signale un blocage materiel (e1000e Hardware Unit Hang)"
+grep -qiE 'firmware.*(fail|error)|failed to load' "$RAW/dmesg.txt" && att "Erreur de chargement de firmware (voir brut/dmesg.txt)"
+grep -qiE 'nfs: server .* not responding' "$RAW/dmesg.txt" && ko "Le client NFS a perdu le serveur (nfs: server not responding)"
+grep -qiE 'throttled|temperature above threshold|thermal.*(critical|shutdown)' "$RAW/dmesg.txt" && att "Bridage thermique signale par le noyau"
+NBERR=$(grep -ciE 'error|fail|timeout|hang|reset' "$RAW/dmesg.txt")
+info "$NBERR ligne(s) contenant error/fail/timeout/hang/reset (detail dans brut/dmesg.txt)"
+
+# --- Logs DavOS / Clonezilla / partclone -------------------------------------
+titre "Logs"
+mkdir -p "$RAW/logs"
+for f in /var/log/davos.log /var/log/davos_restorer.log /var/log/davos_saver.log /var/log/clonezilla.log /var/log/clonezilla/*.log /var/log/partclone.log; do
+  [[ -f $f ]] || continue
+  cp "$f" "$RAW/logs/" 2>/dev/null
+  NE=$(grep -ciE 'error|fail|traceback|abort|no space|unable|cannot' "$f")
+  info "$(basename "$f") : $(wc -l <"$f") lignes, $NE ligne(s) d'erreur"
+  if (( NE > 0 )); then
+    grep -iE 'error|fail|traceback|abort|no space|unable|cannot' "$f" | grep -viE 'error_code=0|no error' | tail -3 | sed 's/^/              > /' | cut -c1-200 | tee -a "$REPORT"
+  fi
+done
+DL=/var/log/davos.log
+[[ -f $DL ]] && grep -q 'Cannot mount' $DL && ko "DavOS n'a pas pu monter un partage NFS (voir davos.log)"
+[[ -f $DL ]] && grep -q 'NFSv4 client identifier set to' $DL && ok "Correctif d'identite NFS actif (davos.log)"
+RATE=$(grep -hoE 'Ave\. Rate: *[0-9.]+ *[GM]B/min' /var/log/clonezilla/partclone.log /var/log/davos_restorer.log 2>/dev/null | tail -1)
+[[ -n $RATE ]] && info "Dernier debit moyen partclone (donnees decompressees) : ${RATE#*: }"
+grep -qiE 'No space left' /var/log/davos_restorer.log 2>/dev/null && ko "Disque cible trop petit pour l'image (No space left)"
+grep -qiE 'checksum|crc.*(error|mismatch)' /var/log/clonezilla/partclone.log 2>/dev/null && ko "Erreur de somme de controle dans partclone : image possiblement corrompue"
+
+# --- Synthese ----------------------------------------------------------------
+{
+echo ""
+echo "=== Synthese ==="
+echo "$NB_OK OK, $NB_ATT attention(s), $NB_KO probleme(s)"
+for l in "${SYNTHESE[@]}"; do echo "  $l"; done
+echo ""
+echo "Resultats complets : $OUTDIR"
+} | tee -a "$REPORT"
