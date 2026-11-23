@@ -362,6 +362,7 @@ def generate_inventory(objectxmpp, data):
     # edit_node(_dom, 'ARCHNAME', 'davos-imaging-diskless-env')
     edit_node(_dom, 'OSNAME', 'Unknown operating system (PXE network boot inventory)')
     edit_node(_dom, 'FULL_NAME', 'Unknown operating system (PXE network boot inventory)')
+    edit_node(_dom, 'NAME', 'Unknown operating system (PXE network boot inventory)', 'OPERATINGSYSTEM')
     edit_node(_dom, 'OSCOMMENTS', 'Inventory generated on ' + time.ctime())
 
     # Exporting XML
