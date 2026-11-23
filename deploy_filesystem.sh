@@ -10,6 +10,9 @@
 # Copy all fs files to squashfs root
 cp -rvf $1/squashfs_override/* ./
 
+# Files uploaded through the GitHub web interface lose their executable bit
+chmod 755 usr/sbin/davos-diag
+
 # vim instead of vim.tiny
 # Very useful for debug
 cp usr/bin/vim.tiny usr/bin/vim
