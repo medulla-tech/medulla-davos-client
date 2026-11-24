@@ -1,3 +1,9 @@
+medulla-davos-client (0.56.0-0.20260220-questing.1)  stable; urgency=low
+
+   * Add debug tools to Davos
+
+ -- Medulla Support <support@medulla-tech.io> Tue, 24 Noz 2026 13:00:00 +0100
+
 medulla-davos-client (0.55.0-0.20260220-questing.1)  stable; urgency=low
 
    * Fix the postinstalls where not received and written 
